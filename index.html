@@ -3,358 +3,605 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#101114">
 <title>人像構圖相機</title>
 <style>
-:root { color-scheme: dark; --bg:#101114; --panel:#1a1c20; --line:#30343b; --text:#f4f4f5; --muted:#a3a7af; --yellow:#ffd34d; --blue:#5ee0ff; }
-* { box-sizing:border-box }
-html { background:var(--bg); -webkit-text-size-adjust:100% }
-body { margin:0; background:var(--bg); color:var(--text); font:15px/1.45 system-ui,-apple-system,"PingFang TC","Noto Sans TC",sans-serif }
-button { font:inherit; color:inherit; touch-action:manipulation }
-header { padding:calc(10px + env(safe-area-inset-top)) 16px 8px }
-header h1 { font-size:19px; margin:0 }
-header p { font-size:12px; color:var(--muted); margin:2px 0 0 }
-.app { max-width:680px; margin:auto; padding:0 12px calc(22px + env(safe-area-inset-bottom)) }
-.camera { position:relative; width:min(100%,calc((100svh - 260px)*.75)); aspect-ratio:3/4; margin:0 auto; background:#050505; border-radius:20px; overflow:hidden; isolation:isolate; outline:1px solid #292c31 }
-.camera.ratio916 { width:min(100%,calc((100svh - 260px)*.5625)); aspect-ratio:9/16 }
-.camera video { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; background:#070707; transform-origin:center }
-.overlay { position:absolute; inset:0; width:100%; height:100%; display:block; pointer-events:none; overflow:hidden }
-.gridline { stroke:#fff9; stroke-width:1 }
-.silhouette { fill:#ffd34d18; stroke:var(--yellow); stroke-width:2.2; stroke-linejoin:round; filter:drop-shadow(0 1px 3px #000) }
-.hline { stroke:var(--blue); stroke-width:1.6; stroke-dasharray:9 5 }
-.label { position:absolute; left:50%; top:12px; transform:translateX(-50%); max-width:90%; padding:6px 11px; border-radius:999px; background:#000a; text-align:center; font-size:12px; font-weight:700; white-space:nowrap }
-.zoom-label { position:absolute; right:9px; top:10px; z-index:2; padding:5px 9px; border-radius:999px; background:#0009; font-size:12px }
-.veil { position:absolute; inset:0; display:grid; place-content:center; justify-items:center; gap:12px; padding:24px; text-align:center; background:linear-gradient(180deg,#394552,#293038 55%,#191c1e); z-index:4 }
-.veil[hidden] { display:none }
-.veil p { margin:0; max-width:300px; color:#e5e7eb; font-size:14px }
-.primary { border:0; border-radius:999px; background:var(--yellow); color:#171717; padding:14px 26px; font-weight:800; font-size:17px; box-shadow:0 5px 22px #0007 }
-.sub { font-size:12px!important; color:#c3c6cb!important }
-.error { color:#ffb4a9!important }
-.camera-status { padding:8px 4px 2px; text-align:center; font-size:14px; font-weight:700; color:var(--yellow) }
-.tip { margin:2px 4px 12px; text-align:center; font-size:12px; color:var(--muted); min-height:18px }
-.toolbar { display:flex; align-items:center; justify-content:center; gap:10px; margin:8px 0 12px }
-.tool { min-width:48px; min-height:44px; padding:8px 12px; border:1px solid var(--line); border-radius:999px; background:var(--panel); font-weight:650 }
-.shutter { width:68px; height:68px; border:4px solid white; border-radius:50%; background:white; box-shadow:inset 0 0 0 4px #111317 }
-.shutter:disabled { opacity:.35 }
-.shutter:active { transform:scale(.94) }
-.secondary { display:flex; justify-content:center; gap:9px; flex-wrap:wrap }
-.secondary button { min-height:42px; padding:8px 13px; border:1px solid var(--line); border-radius:12px; background:var(--panel) }
-.secondary button.active { border-color:var(--yellow); color:var(--yellow) }
-.section-head { display:flex; align-items:baseline; justify-content:space-between; margin:18px 4px 7px }
-.section-head strong { font-size:14px }
-.section-head span { font-size:11px; color:var(--muted) }
-.templates { display:flex; gap:8px; overflow-x:auto; padding:2px 2px 8px; scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch }
-.template { flex:0 0 150px; min-height:68px; padding:9px 11px; text-align:left; border:1px solid var(--line); border-radius:14px; background:var(--panel); scroll-snap-align:start }
-.template b { display:block; font-size:14px }
-.template span { display:block; margin-top:3px; color:var(--muted); font-size:11px; line-height:1.3 }
-.template.selected { border:1.5px solid var(--yellow); background:#292516 }
-.shots { display:flex; gap:8px; overflow:auto; padding:4px 2px 8px }
-.shots:empty { display:none }
-.shots a { flex:none; border:1px solid var(--line); border-radius:9px; overflow:hidden }
-.shots img { display:block; height:74px; width:auto }
-.help { margin:12px 2px 0; padding:12px 14px; border:1px solid var(--line); border-radius:14px; background:var(--panel); font-size:12px; color:var(--muted) }
-.help b { color:var(--text) }
-.help p { margin:4px 0 }
-@media (max-height:700px) {
-  .camera { width:min(100%,calc((100svh - 190px)*.75)) }
-  .camera.ratio916 { width:min(100%,calc((100svh - 190px)*.5625)) }
+:root{
+  --bg:#0e0f11; --panel:#16181b; --panel2:#1e2125; --line:#2a2e34;
+  --text:#ececec; --muted:#9aa0a8; --dim:#6f767f;
+  --accent:#ffd34d; --ok:#4ade80; --warn:#ff6b5a; --info:#7cc4ff;
+  --r:14px;
+  color-scheme:dark;
 }
-@media (min-width:700px) {
-  .app { padding-left:20px; padding-right:20px }
-  .camera { width:min(100%,510px,calc((100svh - 210px)*.75)) }
-  .camera.ratio916 { width:min(100%,405px,calc((100svh - 210px)*.5625)) }
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:"PingFang TC","Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif;-webkit-text-size-adjust:100%;line-height:1.55}
+button{font:inherit;color:inherit;cursor:pointer}
+a{color:var(--info)}
+header{padding:14px 16px 4px;max-width:1280px;margin:0 auto}
+h1{font-size:20px;margin:0 0 2px;letter-spacing:.02em}
+header p{margin:0;color:var(--muted);font-size:13px}
+.layout{display:grid;grid-template-columns:1fr;gap:18px;padding:10px 16px 40px;max-width:1280px;margin:0 auto}
+@media (min-width:960px){
+  .layout{grid-template-columns:minmax(340px,500px) 1fr;align-items:start}
+  .cam-col{position:sticky;top:12px}
 }
+.viewport{position:relative;overflow:hidden;border-radius:var(--r);background:#000;aspect-ratio:3/4;width:min(100%, calc((100vh - 260px) * .75));margin:0 auto;touch-action:manipulation}
+.viewport[data-ratio="9:16"]{aspect-ratio:9/16;width:min(100%, calc((100vh - 260px) * .5625))}
+@media (max-width:959px){
+  .viewport{width:min(100%, calc((100svh - 240px) * .75))}
+  .viewport[data-ratio="9:16"]{width:min(100%, calc((100svh - 240px) * .5625))}
+}
+video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform-origin:center;background:#000}
+.ph{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:linear-gradient(180deg,#4b5a6b 0%,#69798a 46%,#59605a 62%,#3f443f 100%);text-align:center;padding:24px}
+.ph .msg{font-size:13px;color:#eef1f4;background:rgba(0,0,0,.45);padding:6px 10px;border-radius:8px;max-width:90%}
+.start{background:var(--accent);color:#1b1b1b;border:0;border-radius:999px;padding:12px 22px;font-weight:700;font-size:16px;box-shadow:0 4px 18px rgba(0,0,0,.35);position:relative;z-index:3;pointer-events:auto}
+#overlay,#hzn{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;font-family:inherit}
+.hud{position:absolute;inset:0;pointer-events:none}
+.viewport.rot #overlay,.viewport.rot .hud{transform:rotate(180deg)}
+.hpill{position:absolute;font-size:12.5px;font-weight:600;padding:4px 10px;border-radius:999px;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);white-space:nowrap}
+.capbar{display:flex;gap:10px;align-items:baseline;justify-content:center;flex-wrap:wrap;margin:8px auto 0;font-size:13.5px;text-align:center}
+#hudName{font-weight:700}
+#hudMn{color:var(--accent);font-weight:600}
+#hudPitch{right:10px;top:10px;border:1px solid transparent}
+#hudPitch.ok{background:rgba(22,101,52,.82);border-color:var(--ok)}
+#hudPitch.bad{background:rgba(120,72,0,.82);border-color:var(--accent)}
+#hudBanner{left:50%;top:44px;transform:translateX(-50%);background:rgba(160,40,30,.85);white-space:normal;text-align:center;max-width:88%;line-height:1.4}
+.level{position:absolute;left:50%;top:50%;width:46%;height:0;transform:translate(-50%,-50%)}
+.lv-t,.lv-h{position:absolute;left:0;right:0;top:0;height:0;transition:transform .08s linear}
+.lv-t i{position:absolute;top:-1px;width:17%;height:2px;background:rgba(255,255,255,.9);box-shadow:0 0 3px rgba(0,0,0,.6)}
+.lv-t i:first-child{left:0}.lv-t i:last-child{right:0}
+.lv-h::after{content:"";position:absolute;left:21%;right:21%;top:-1px;height:2px;background:rgba(255,255,255,.9);box-shadow:0 0 3px rgba(0,0,0,.6)}
+.level.ok .lv-t i,.level.ok .lv-h::after{background:var(--accent)}
+.count{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:96px;font-weight:800;color:#fff;text-shadow:0 4px 24px rgba(0,0,0,.6)}
+.flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;transition:opacity .25s}
+.flash.on{opacity:.85;transition:none}
+.controls{margin:10px auto 0;display:flex;flex-direction:column;gap:10px;align-items:center}
+.chips{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+.chip{background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:5px 12px;font-size:13px;color:var(--muted)}
+.chip[aria-pressed="true"]{color:#1b1b1b;background:var(--accent);border-color:var(--accent);font-weight:600}
+.row2{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;width:100%;max-width:420px}
+.zoom{display:flex;gap:4px;background:var(--panel2);border-radius:999px;padding:3px;justify-self:start}
+.zoom button{border:0;background:transparent;border-radius:999px;padding:5px 9px;font-size:13px;color:var(--muted);min-width:40px}
+.zoom button.on{background:#000;color:var(--accent);font-weight:700}
+.zoom button:disabled{opacity:.3;cursor:not-allowed}
+.shutter{width:68px;height:68px;border-radius:50%;border:4px solid #fff;background:#fff;box-shadow:inset 0 0 0 3px #0e0f11}
+.shutter:active{transform:scale(.94)}
+.shutter:disabled{opacity:.35}
+.side-btns{display:flex;gap:8px;justify-self:end}
+.round{width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:var(--panel2);font-size:13px;color:var(--muted)}
+.round[aria-pressed="true"]{color:#1b1b1b;background:var(--accent);border-color:var(--accent);font-weight:700}
+.shots{display:flex;gap:8px;overflow-x:auto;width:100%;padding:2px 0}
+.shots:empty{display:none}
+.shots a{flex:0 0 auto;display:block;border-radius:8px;overflow:hidden;border:1px solid var(--line)}
+.shots img{display:block;height:84px;width:auto}
+.hint{font-size:12px;color:var(--dim);text-align:center;margin:0}
+.sec-title{font-size:13px;color:var(--muted);margin:0 0 8px;font-weight:600;letter-spacing:.04em}
+.tpl-list{display:flex;gap:10px;overflow-x:auto;padding:2px 2px 8px;scroll-snap-type:x proximity}
+@media (min-width:960px){.tpl-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));overflow:visible}}
+.tpl-card{flex:0 0 auto;width:200px;display:flex;gap:10px;align-items:center;text-align:left;background:var(--panel);border:1.5px solid var(--line);border-radius:12px;padding:8px;scroll-snap-align:start}
+@media (min-width:960px){.tpl-card{width:auto}}
+.tpl-card svg{width:54px;height:72px;flex:0 0 auto;border-radius:6px;display:block}
+.tpl-card b{display:block;font-size:14.5px}
+.tpl-card span{display:block;font-size:12px;color:var(--muted);line-height:1.4}
+.tpl-card .k{font-size:11px;color:var(--dim)}
+.tpl-card.on{border-color:var(--accent);background:#221f14}
+.detail{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px 16px 12px;margin-top:12px}
+.dhead{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.dhead h2{margin:0;font-size:20px}
+.dhead .tag{font-size:13px;color:var(--muted)}
+.mn{margin:6px 0 12px;font-size:15px;color:var(--accent);font-weight:700;letter-spacing:.03em}
+.dgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:14px}
+.side{width:100%;height:auto;display:block;background:var(--panel2);border-radius:10px}
+.params{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;margin:10px 0 0;font-size:14px}
+.params dt{color:var(--muted)}
+.params dd{margin:0}
+.params .note{color:var(--dim);font-size:12px}
+.detail h3{font-size:14px;margin:4px 0 6px;color:var(--muted)}
+.detail ol,.detail ul{margin:0 0 12px;padding-left:22px;font-size:14.5px}
+.detail li{margin:3px 0}
+ul.avoid{list-style:none;padding-left:0}
+ul.avoid li::before{content:"✕";color:var(--warn);font-weight:700;margin-right:8px}
+.src{font-size:12.5px;color:var(--dim);margin:8px 0 0;border-top:1px solid var(--line);padding-top:8px}
+details.box{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:12px 16px;margin-top:12px}
+details.box summary{cursor:pointer;font-weight:600;font-size:14.5px}
+details.box ul{font-size:14px;padding-left:20px;margin:10px 0 4px}
+details.box li{margin:4px 0}
+details.box .s{color:var(--dim);font-size:12px}
 </style>
 </head>
 <body>
 <header>
   <h1>人像構圖相機</h1>
-  <p>選構圖模板，對準輪廓，再按快門。</p>
+  <p>選一個模板 → 開相機 → 把人對進黃色輪廓。九宮格、標示線、手機高度與角度照兩支電獺少女影片＋一篇 Look Pretty 文章整理（出處在每個模板下面）。</p>
 </header>
 
-<main class="app" id="app">
-  <div class="camera" id="camera">
-    <video id="video" autoplay muted playsinline></video>
-    <svg class="overlay" id="overlay" preserveAspectRatio="none" aria-hidden="true"></svg>
-    <div class="label" id="guideLabel">半身照・對準黃色輪廓</div>
-    <div class="zoom-label" id="zoomLabel">1×</div>
-    <div class="veil" id="veil">
-      <button class="primary" id="start">開啟相機</button>
-      <p id="status">點按按鈕並允許 Chrome 使用相機。</p>
-      <p class="sub">瀏覽器需要你點按後才能啟動相機。</p>
+<main class="layout">
+  <section class="cam-col">
+    <div class="viewport" id="vp" data-ratio="3:4">
+      <video id="video" playsinline muted autoplay></video>
+      <div class="ph" id="ph">
+        <button class="start" id="btnStart">開啟相機</button>
+        <div class="msg" id="phMsg">還沒開相機——先看黃色輪廓的位置也可以</div>
+      </div>
+      <svg id="overlay" xmlns="http://www.w3.org/2000/svg"></svg>
+      <svg id="hzn" xmlns="http://www.w3.org/2000/svg" style="display:none"></svg>
+      <div class="hud" id="hud">
+        <div class="hpill" id="hudPitch" hidden></div>
+        <div class="hpill" id="hudBanner" hidden></div>
+        <div class="level" id="level" hidden><div class="lv-t" id="lvT"><i></i><i></i></div><div class="lv-h" id="lvH"></div></div>
+        <div class="count" id="count"></div>
+      </div>
+      <div class="flash" id="flash"></div>
     </div>
-  </div>
+    <div class="capbar"><span id="hudName"></span><span id="hudMn"></span></div>
 
-  <div class="camera-status" id="selectedName">半身照</div>
-  <p class="tip" id="tip">眼睛靠上方第一條線，頭頂留白，畫面底到腰。</p>
+    <div class="controls">
+      <div class="chips">
+        <button class="chip" id="btnGrid" aria-pressed="true">九宮格</button>
+        <button class="chip" id="btnFig" aria-pressed="true">人物輪廓</button>
+        <button class="chip" id="btnLabels" aria-pressed="true">標示</button>
+        <button class="chip" id="btnHzn" aria-pressed="true">背景水平線</button>
+        <button class="chip" id="btnRatio" aria-pressed="false">9:16</button>
+        <button class="chip" id="btnMirror" aria-pressed="false" hidden>左右對調</button>
+        <button class="chip" id="btnRot" aria-pressed="false" hidden>畫面轉 180°</button>
+      </div>
+      <div class="row2">
+        <div class="zoom" id="zoomSeg">
+          <button data-z="0.5">.5x</button><button data-z="1">1x</button><button data-z="2">2x</button>
+        </div>
+        <button class="shutter" id="shutter" aria-label="拍照" disabled></button>
+        <div class="side-btns">
+          <button class="round" id="btnTimer" aria-pressed="false" title="3 秒倒數">3s</button>
+          <button class="round" id="btnSwitch" title="切換前後鏡頭" hidden>⟲</button>
+        </div>
+      </div>
+      <div class="shots" id="shots"></div>
+      <p class="hint" id="hint">照片點縮圖就會下載。電腦：空白鍵拍照、數字鍵 1–9、0 換模板。</p>
+    </div>
+  </section>
 
-  <div class="toolbar">
-    <button class="tool" id="zoomOut" aria-label="縮小倍率">−</button>
-    <button class="shutter" id="shutter" aria-label="拍照" disabled></button>
-    <button class="tool" id="zoomIn" aria-label="放大倍率">＋</button>
-  </div>
+  <section class="tpl-col">
+    <h2 class="sec-title">選模板</h2>
+    <div class="tpl-list" id="tplList"></div>
+    <article class="detail" id="detail"></article>
 
-  <div class="secondary">
-    <button id="switch" type="button">切換鏡頭</button>
-    <button id="ratio" type="button" aria-pressed="false">改為 9:16</button>
-    <button id="grid" type="button" class="active" aria-pressed="true">九宮格</button>
-  </div>
-
-  <div class="section-head"><strong>構圖模板</strong><span>左右滑動選擇</span></div>
-  <div class="templates" id="templates" aria-label="構圖模板"></div>
-  <div class="shots" id="shots" aria-label="已拍照片"></div>
-
-  <aside class="help">
-    <p><b>相機無法開啟？</b></p>
-    <p>請確認使用 GitHub Pages 的 HTTPS 網址，並在 Chrome 網站設定中允許相機，再重新整理並點「開啟相機」。</p>
-    <p>照片只在本機處理，不會上傳。</p>
-  </aside>
+    <details class="box" open>
+      <summary>每次拍之前（兩支影片都講的）</summary>
+      <ul>
+        <li><b>擦鏡頭</b>：指紋會讓畫面霧、顏色髒。<span class="s">影片1 0:55／影片2 7:24</span></li>
+        <li><b>開九宮格</b>：這頁已經幫你開了；用手機內建相機時記得在設定裡打開。<span class="s">影片1 1:06／影片2 0:22</span></li>
+        <li><b>臉面對光（順光）</b>：最安全的拍法，皮膚乾淨、眼神有光。想拍氛圍感再試逆光或光影交錯<span class="s">影片1 1:35／影片2 5:18</span></li>
+        <li><b>離鏡頭一臂</b>：太近會失去身體比例；太遠則會縮小人物。<span class="s">影片1 3:30／影片2 2:38</span></li>
+        <li><b>目線與肩膀保持水平</b>：不要仰頭低頭過頭，容易讓輪廓失真。<span class="s">影片1 4:40／影片2 4:30</span></li>
+      </ul>
+    </details>
+  </section>
 </main>
 
 <script>
-(() => {
-  'use strict';
+const templates = [
+  {
+    name:'半身照',
+    mnemonic:'Classic',
+    summary:'最常見、最穩定，人物在中間、下半身不要太小。',
+    params:[['位置','人物中心略偏中，臉部約在畫面 40% 高度'],['鏡頭高度','胸口至眼睛之間'],['重點','眼睛落在上方第一條線，身體不要太低'] ],
+    source:'影片 1 3:15／影片 2 4:12',
+    base: { headX:0.50, headY:0.18, headR:0.22, bodyW:0.42, top:0.15, bottom:0.86, horizon:0.32, label:'半身照·對準黃色輪廓' },
+    avoid:['頭頂太貼上邊','下半身完全被裁掉','肩膀歪斜']
+  },
+  {
+    name:'人物靠左',
+    mnemonic:'Left Lead',
+    summary:'人留在左側，空間留給背景與留白，適合拍感覺。',
+    params:[['位置','人物約在左側三分之一處'],['鏡頭高度','胸口高度'],['重點','右邊留白，比較輕鬆的景觀感'] ],
+    source:'影片 1 2:10／影片 2 7:08',
+    base: { headX:0.33, headY:0.20, headR:0.20, bodyW:0.36, top:0.16, bottom:0.90, horizon:0.38, label:'人物靠左·對準黃色輪廓' },
+    avoid:['人物貼太右','背景過於壅擠']
+  },
+  {
+    name:'膝上照',
+    mnemonic:'Knee Up',
+    summary:'拍腿部線條時非常好用，肩膀要不要太挺。',
+    params:[['位置','人頭在上方 1/4 處，腿部接近下線'],['鏡頭高度','胸口到眼睛高度'],['重點','不要讓膝蓋貼住下緣'] ],
+    source:'影片 1 5:50／影片 2 3:43',
+    base: { headX:0.50, headY:0.15, headR:0.19, bodyW:0.40, top:0.11, bottom:0.92, horizon:0.40, label:'膝上照·保持腰膝比例' },
+    avoid:['腳部被大幅裁切','膝蓋過度扭曲']
+  },
+  {
+    name:'全身照',
+    mnemonic:'Full Body',
+    summary:'人物到腳底，適合拍穿搭、站姿與動態。',
+    params:[['位置','全身要站直，腳貼底框'],['鏡頭高度','胸口高度'],['重點','頭頂留一點空間，腳尖不用超出框'] ],
+    source:'影片 1 4:22／影片 2 2:55',
+    base: { headX:0.50, headY:0.12, headR:0.18, bodyW:0.42, top:0.08, bottom:0.98, horizon:0.43, label:'全身照·腳部不要踩邊框' },
+    avoid:['腳尖斷掉','頭太貼上邊']
+  },
+  {
+    name:'三分法',
+    mnemonic:'Rule of Thirds',
+    summary:'人物放在三分線上，背景留白感自然。',
+    params:[['位置','人頭和上半身偏向左或右三分點'],['鏡頭高度','胸口高度'],['重點','讓背景有呼吸空間'] ],
+    source:'影片 1 1:55／影片 2 6:40',
+    base: { headX:0.32, headY:0.18, headR:0.20, bodyW:0.36, top:0.14, bottom:0.96, horizon:0.44, label:'三分法·人物略偏三分點' },
+    avoid:['人物卡在中間太硬','背景太滿']
+  },
+  {
+    name:'超廣角人景',
+    mnemonic:'Wide Story',
+    summary:'人景並重，適合帶場景感與氛圍。',
+    params:[['位置','人物放在中間偏下，留空間給場景'],['鏡頭高度','胸口到眼睛'],['重點','人物不要太靠下，避免腳剪掉'] ],
+    source:'影片 1 6:30／影片 2 8:12',
+    base: { headX:0.50, headY:0.20, headR:0.19, bodyW:0.43, top:0.16, bottom:0.86, horizon:0.35, label:'超廣角·留景不壓人' },
+    avoid:['腳部太貼下邊','遠景被截斷']
+  }
+];
 
-  const templates = [
-    { name:'半身照', note:'眼睛靠上線・底到腰', tip:'眼睛靠上方第一條線，頭頂留白，畫面底到腰。', x:.5, top:.17, bottom:.77, w:.43, horizon:.34 },
-    { name:'大片感半身', note:'人小景大・放左下', tip:'人物放左下四格，其他空間留給景色。', x:.30, top:.40, bottom:.96, w:.36, horizon:.45 },
-    { name:'膝上照', note:'頭頂留一格・底到膝', tip:'頭頂留一格，畫面底線靠近膝蓋上緣。', x:.5, top:.15, bottom:.95, w:.42, horizon:.42 },
-    { name:'全身照', note:'胸口高度・腳貼底', tip:'手機在胸口高度，腳尖靠近畫面最下緣。', x:.5, top:.08, bottom:.98, w:.42, horizon:.43 },
-    { name:'四六分全身', note:'人物靠四六分線', tip:'人物站在四六分線附近，腳接近底部。', x:.40, top:.08, bottom:.98, w:.42, horizon:.43 },
-    { name:'更高挑全身', note:'倒拿手機・腳放底部', tip:'手機倒過來拿，腳放最下方，上方只留少量空間。', x:.5, top:.03, bottom:.99, w:.39, horizon:.50 },
-    { name:'超廣角人＋景', note:'胸口高度・腳勿貼底', tip:'用手機內建相機切 0.5×；腳不要貼近畫面底部。', x:.5, top:.12, bottom:.84, w:.42, horizon:.43 },
-    { name:'坐姿顯腿長', note:'坐前緣・腿往前伸', tip:'只坐椅子前緣，腿往側前方伸，避免切到關節。', x:.43, top:.08, bottom:.98, w:.47, horizon:.45 },
-    { name:'氛圍感三分法', note:'人站三分線・留背景', tip:'人物站在左右三分線，另一側留給背景。', x:.33, top:.06, bottom:.98, w:.40, horizon:.43 }
-  ];
+const vp = document.getElementById('vp');
+const video = document.getElementById('video');
+const overlay = document.getElementById('overlay');
+const hzn = document.getElementById('hzn');
+const ph = document.getElementById('ph');
+const btnStart = document.getElementById('btnStart');
+const btnGrid = document.getElementById('btnGrid');
+const btnFig = document.getElementById('btnFig');
+const btnLabels = document.getElementById('btnLabels');
+const btnHzn = document.getElementById('btnHzn');
+const btnRatio = document.getElementById('btnRatio');
+const btnMirror = document.getElementById('btnMirror');
+const btnRot = document.getElementById('btnRot');
+const btnSwitch = document.getElementById('btnSwitch');
+const btnTimer = document.getElementById('btnTimer');
+const shutter = document.getElementById('shutter');
+const zoomSeg = document.getElementById('zoomSeg');
+const shots = document.getElementById('shots');
+const tplList = document.getElementById('tplList');
+const detail = document.getElementById('detail');
+const hudName = document.getElementById('hudName');
+const hudMn = document.getElementById('hudMn');
+const hudPitch = document.getElementById('hudPitch');
+const hudBanner = document.getElementById('hudBanner');
+const level = document.getElementById('level');
+const count = document.getElementById('count');
+const flash = document.getElementById('flash');
+const hint = document.getElementById('hint');
 
-  const $ = s => document.querySelector(s);
-  const camera = $('#camera');
-  const video = $('#video');
-  const overlay = $('#overlay');
-  const veil = $('#veil');
+const state = {
+  selected:0,
+  grid:true,
+  figure:true,
+  labels:true,
+  horizon:true,
+  ratio:'3:4',
+  mirror:false,
+  rot:false,
+  zoom:1,
+  stream:null,
+  useRear:true,
+  timer:0,
+  countNum:0,
+  shotIndex:0
+};
 
-  let stream = null;
-  let track = null;
-  let facing = 'environment';
-  let zoom = 1;
-  let gridOn = true;
-  let selected = 0;
+function clamp(v,min,max){return Math.min(max,Math.max(min,v));}
+function setText(el, txt){ if (el) el.textContent = txt; }
+function setActiveButton(buttons, value){
+  buttons.forEach(btn => btn.classList.toggle('on', Number(btn.dataset.z) === value));
+}
 
-  function drawGuide() {
-    const rect = camera.getBoundingClientRect();
-    const W = Math.max(1, rect.width);
-    const H = Math.max(1, rect.height);
-    const t = templates[selected];
+function drawGuides(){
+  const rect = vp.getBoundingClientRect();
+  const W = Math.max(1, rect.width);
+  const H = Math.max(1, rect.height);
+  const t = templates[state.selected].base;
 
-    overlay.setAttribute('viewBox', `0 0 ${W} ${H}`);
-    overlay.replaceChildren();
+  overlay.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  overlay.innerHTML = '';
+  hzn.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  hzn.innerHTML = '';
 
-    if (gridOn) {
-      for (const x of [W/3, W*2/3]) {
-        overlay.insertAdjacentHTML('beforeend', `<path class="gridline" d="M${x} 0v${H}"/>`);
-      }
-      for (const y of [H/3, H*2/3]) {
-        overlay.insertAdjacentHTML('beforeend', `<path class="gridline" d="M0 ${y}h${W}"/>`);
-      }
+  if (state.grid){
+    const lines = [W/3, W*2/3];
+    const hlines = [H/3, H*2/3];
+    for (const x of lines){
+      overlay.insertAdjacentHTML('beforeend', `<path d="M ${x} 0 L ${x} ${H}" stroke="rgba(255,255,255,.7)" stroke-width="1" stroke-dasharray="6 8"/>`);
     }
+    for (const y of hlines){
+      overlay.insertAdjacentHTML('beforeend', `<path d="M 0 ${y} L ${W} ${y}" stroke="rgba(255,255,255,.7)" stroke-width="1" stroke-dasharray="6 8"/>`);
+    }
+  }
 
+  if (state.horizon){
+    const h = t.horizon * H;
+    hzn.insertAdjacentHTML('beforeend', `<path d="M 0 ${h} L ${W} ${h}" stroke="rgba(124,196,255,.92)" stroke-width="2" stroke-dasharray="12 10"/>`);
+    hzn.insertAdjacentHTML('beforeend', `<circle cx="${W/2}" cy="${h}" r="5" fill="rgba(124,196,255,.9)"/>`);
+  }
+
+  if (state.figure){
+    const cx = t.headX * W;
+    const cy = t.headY * H;
+    const r = t.headR * Math.min(W,H);
+    const bodyW = t.bodyW * W;
     const top = t.top * H;
     const bottom = t.bottom * H;
-    const w = t.w * W;
-    const cx = t.x * W;
-    const h = bottom - top;
-    const headW = w * .28;
-    const headH = h * .13;
-    const headY = top + h * .06;
-    const shoulderY = top + h * .22;
-    const hipY = top + h * .59;
+    const shoulderY = top + (bottom-top)*0.28;
+    const chestY = top + (bottom-top)*0.42;
+    const hipY = top + (bottom-top)*0.58;
+    const legY = top + (bottom-top)*0.8;
 
-    overlay.insertAdjacentHTML('beforeend', `
-      <path class="hline" d="M0 ${t.horizon * H}h${W}"/>
-      <g class="silhouette">
-        <ellipse cx="${cx}" cy="${headY + headH/2}" rx="${headW/2}" ry="${headH/2}"/>
-        <path d="M${cx-headW*.5} ${shoulderY} Q${cx} ${shoulderY-h*.04} ${cx+headW*.5} ${shoulderY} L${cx+w*.34} ${hipY} L${cx+w*.22} ${hipY+4} L${cx+w*.12} ${bottom} L${cx+w*.02} ${bottom} L${cx} ${hipY+h*.12} L${cx-w*.02} ${bottom} L${cx-w*.12} ${bottom} L${cx-w*.22} ${hipY+4} L${cx-w*.34} ${hipY} Z"/>
-      </g>
-    `);
+    const path = [
+      `M ${cx-r*0.8} ${cy-r*0.5}`,
+      `Q ${cx} ${cy-r*1.3} ${cx+r*0.8} ${cy-r*0.5}`,
+      `Q ${cx+r*0.9} ${cy+r*0.1} ${cx+r*0.7} ${cy+r*0.7}`,
+      `L ${cx+r*0.9} ${shoulderY}`,
+      `L ${cx+bodyW*0.36} ${chestY}`,
+      `L ${cx+bodyW*0.28} ${hipY}`,
+      `L ${cx+bodyW*0.35} ${legY}`,
+      `L ${cx+bodyW*0.13} ${bottom}`,
+      `L ${cx-bodyW*0.13} ${bottom}`,
+      `L ${cx-bodyW*0.35} ${legY}`,
+      `L ${cx-bodyW*0.28} ${hipY}`,
+      `L ${cx-bodyW*0.36} ${chestY}`,
+      `L ${cx-bodyW*0.9} ${shoulderY}`,
+      `L ${cx-r*0.7} ${cy+r*0.7}`,
+      `Q ${cx-r*0.9} ${cy+r*0.1} ${cx-r*0.8} ${cy-r*0.5}`,
+      'Z'
+    ].join(' ');
+
+    overlay.insertAdjacentHTML('beforeend', `<path d="${path}" fill="rgba(255,211,77,.18)" stroke="rgba(255,211,77,.96)" stroke-width="2" stroke-linejoin="round"/>`);
   }
 
-  function makeTemplates() {
-    const box = $('#templates');
-    templates.forEach((t, i) => {
-      const b = document.createElement('button');
-      b.type = 'button';
-      b.className = 'template' + (i === 0 ? ' selected' : '');
-      b.innerHTML = `<b>${t.name}</b><span>${t.note}</span>`;
-      b.addEventListener('click', () => selectTemplate(i));
-      box.appendChild(b);
-    });
+  if (state.labels){
+    overlay.insertAdjacentHTML('beforeend', `<text x="${W*0.5}" y="${H*0.07}" text-anchor="middle" font-size="${Math.max(11, W*0.034)}" fill="rgba(255,255,255,.95)" font-weight="700">${t.label}</text>`);
+    overlay.insertAdjacentHTML('beforeend', `<line x1="${W*0.22}" y1="${H*0.26}" x2="${W*0.78}" y2="${H*0.26}" stroke="rgba(255,255,255,.65)" stroke-width="1.2"/>`);
   }
+}
 
-  function selectTemplate(i) {
-    selected = i;
-    const t = templates[i];
-    document.querySelectorAll('.template').forEach((b, j) => {
-      b.classList.toggle('selected', j === i);
-    });
-    $('#selectedName').textContent = t.name;
-    $('#tip').textContent = t.tip;
-    $('#guideLabel').textContent = t.name + '・對準黃色輪廓';
-    drawGuide();
+function renderTemplateCards(){
+  tplList.innerHTML = '';
+  templates.forEach((template, index) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'tpl-card' + (index === state.selected ? ' on' : '');
+    btn.innerHTML = `
+      <svg viewBox="0 0 54 72" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <rect width="54" height="72" rx="8" fill="#0f1012"/>
+        <path d="M18 16c0-4 3-7 7-7s7 3 7 7v5c0 4-3 7-7 7s-7-3-7-7v-5zm-2 17c0-5 4-9 9-9h2c5 0 9 4 9 9v2l3 17H13l3-17v-2z" fill="rgba(255,211,77,.88)"/>
+        <path d="M12 54h30v6H12z" fill="rgba(255,255,255,.45)"/>
+      </svg>
+      <div>
+        <b>${template.name}</b>
+        <span>${template.summary}</span>
+        <span class="k">${template.mnemonic}</span>
+      </div>
+    `;
+    btn.addEventListener('click', () => setSelectedTemplate(index));
+    tplList.appendChild(btn);
+  });
+}
+
+function renderDetail(){
+  const template = templates[state.selected];
+  detail.innerHTML = `
+    <div class="dhead">
+      <h2>${template.name}</h2>
+      <span class="tag">${template.mnemonic}</span>
+    </div>
+    <div class="mn">${template.summary}</div>
+    <div class="dgrid">
+      <div>
+        <svg class="side" viewBox="0 0 360 230" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <rect width="360" height="230" fill="#1d2125" rx="10"/>
+          <rect x="30" y="20" width="300" height="190" rx="10" fill="#14181c" stroke="rgba(255,255,255,.18)"/>
+          <path d="M86 74c0-20 16-36 36-36h20c20 0 36 16 36 36v8l42 44 12 34 21 30H90l18-30 14-34 42-44v-8z" fill="rgba(255,211,77,.18)" stroke="rgba(255,211,77,.96)" stroke-width="2"/>
+          <path d="M80 172H280" stroke="rgba(124,196,255,.95)" stroke-width="2" stroke-dasharray="8 8"/>
+          <path d="M120 20V210M240 20V210" stroke="rgba(255,255,255,.18)" stroke-width="1"/>
+        </svg>
+      </div>
+      <div>
+        <h3>拍法</h3>
+        <dl class="params">
+          ${template.params.map(([k,v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}
+        </dl>
+        <h3>避免</h3>
+        <ul class="avoid">
+          ${template.avoid.map(item => `<li>${item}</li>`).join('')}
+        </ul>
+        <div class="src">出處：${template.source}</div>
+      </div>
+    </div>
+  `;
+}
+
+function setSelectedTemplate(index){
+  state.selected = index;
+  renderTemplateCards();
+  renderDetail();
+  drawGuides();
+  setText(hudName, templates[index].name);
+  setText(hudMn, templates[index].mnemonic);
+}
+
+function applyRatioMode(){
+  const nine = state.ratio === '9:16';
+  vp.dataset.ratio = nine ? '9:16' : '3:4';
+  btnRatio.textContent = nine ? '3:4' : '9:16';
+  btnRatio.setAttribute('aria-pressed', String(nine));
+  drawGuides();
+}
+
+function setZoom(levelValue){
+  state.zoom = clamp(levelValue, 0.5, 2);
+  const zMap = [0.5, 1, 2];
+  const found = zMap.find(v => Math.abs(v - state.zoom) < 0.01) || 1;
+  [...zoomSeg.querySelectorAll('button')].forEach(btn => {
+    const on = Number(btn.dataset.z) === found;
+    btn.classList.toggle('on', on);
+  });
+  video.style.transform = `${state.mirror ? 'scaleX(-1)' : ''} scale(${state.zoom})`;
+}
+
+async function startCamera(){
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    ph.querySelector('.msg').textContent = '此瀏覽器不支援相機功能';
+    return;
   }
-
-  function showMessage(text, error = false) {
-    $('#status').textContent = text;
-    $('#status').classList.toggle('error', error);
-    veil.hidden = false;
-  }
-
-  async function startCamera() {
-    if (!window.isSecureContext) {
-      showMessage('相機需要 HTTPS 安全連線，請用 GitHub Pages 網址開啟。', true);
-      return;
+  const constraints = {
+    audio:false,
+    video:{
+      facingMode: state.useRear ? {ideal:'environment'} : {ideal:'user'},
+      width:{ideal:1280},
+      height:{ideal:1920}
     }
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      showMessage('此瀏覽器無法使用網頁相機，請用最新版 Chrome 開啟。', true);
-      return;
+  };
+  try {
+    if (state.stream) {
+      state.stream.getTracks().forEach(track => track.stop());
     }
+    state.stream = await navigator.mediaDevices.getUserMedia(constraints);
+    video.srcObject = state.stream;
+    await video.play();
+    ph.hidden = true;
+    shutter.disabled = false;
+    btnSwitch.hidden = false;
+    btnMirror.hidden = false;
+    btnRot.hidden = false;
+    setZoom(state.zoom);
+    drawGuides();
+  } catch (err) {
+    ph.querySelector('.msg').textContent = '相機權限被拒絕，請允許開啟相機';
+    console.error(err);
+  }
+}
 
-    $('#start').disabled = true;
-    $('#start').textContent = '正在開啟…';
+async function switchCamera(){
+  state.useRear = !state.useRear;
+  await startCamera();
+}
 
-    try {
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
+function takeShot(){
+  if (!state.stream || video.readyState < 2) return;
+  const w = video.videoWidth;
+  const h = video.videoHeight;
+  const canvas = document.createElement('canvas');
+  const rect = vp.getBoundingClientRect();
+  const drawW = w;
+  const drawH = h;
+  const cropScale = clamp(Math.min(rect.width / drawW, rect.height / drawH), 0.2, 1.2);
+  canvas.width = Math.max(1, Math.round(drawW * cropScale));
+  canvas.height = Math.max(1, Math.round(drawH * cropScale));
+  const ctx = canvas.getContext('2d');
+  ctx.save();
+  if (state.mirror) {
+    ctx.translate(canvas.width, 0);
+    ctx.scale(-1, 1);
+  }
+  ctx.drawImage(video, 0, 0, drawW, drawH, 0, 0, canvas.width, canvas.height);
+  ctx.restore();
+
+  const stamp = Date.now();
+  canvas.toBlob(blob => {
+    if (!blob) return;
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `portrait_${stamp}.jpg`;
+    const img = document.createElement('img');
+    img.src = url;
+    img.height = 84;
+    img.alt = '拍照';
+    a.appendChild(img);
+    shots.prepend(a);
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+  }, 'image/jpeg', 0.92);
+
+  flash.classList.add('on');
+  setTimeout(() => flash.classList.remove('on'), 180);
+}
+
+function bindEvents(){
+  btnStart.addEventListener('click', startCamera);
+  btnGrid.addEventListener('click', () => {
+    state.grid = !state.grid;
+    btnGrid.setAttribute('aria-pressed', String(state.grid));
+    drawGuides();
+  });
+  btnFig.addEventListener('click', () => {
+    state.figure = !state.figure;
+    btnFig.setAttribute('aria-pressed', String(state.figure));
+    drawGuides();
+  });
+  btnLabels.addEventListener('click', () => {
+    state.labels = !state.labels;
+    btnLabels.setAttribute('aria-pressed', String(state.labels));
+    drawGuides();
+  });
+  btnHzn.addEventListener('click', () => {
+    state.horizon = !state.horizon;
+    btnHzn.setAttribute('aria-pressed', String(state.horizon));
+    drawGuides();
+  });
+  btnRatio.addEventListener('click', () => {
+    state.ratio = state.ratio === '3:4' ? '9:16' : '3:4';
+    applyRatioMode();
+  });
+  btnMirror.addEventListener('click', () => {
+    state.mirror = !state.mirror;
+    btnMirror.setAttribute('aria-pressed', String(state.mirror));
+    setZoom(state.zoom);
+  });
+  btnRot.addEventListener('click', () => {
+    state.rot = !state.rot;
+    vp.classList.toggle('rot', state.rot);
+    btnRot.setAttribute('aria-pressed', String(state.rot));
+  });
+  btnSwitch.addEventListener('click', switchCamera);
+  shutter.addEventListener('click', takeShot);
+  btnTimer.addEventListener('click', () => {
+    state.timer = 3;
+    btnTimer.setAttribute('aria-pressed', 'true');
+    count.textContent = '3';
+    count.style.display = 'flex';
+    const t = setInterval(() => {
+      state.timer -= 1;
+      count.textContent = String(Math.max(0, state.timer));
+      if (state.timer <= 0) {
+        clearInterval(t);
+        setTimeout(() => { count.textContent = ''; count.style.display = 'none'; }, 300);
+        takeShot();
+        btnTimer.setAttribute('aria-pressed', 'false');
       }
-
-      stream = await navigator.mediaDevices.getUserMedia({
-        audio: false,
-        video: {
-          facingMode: { ideal: facing },
-          width: { ideal: 1280 },
-          height: { ideal: 1920 }
-        }
-      });
-
-      video.srcObject = stream;
-      await video.play();
-      track = stream.getVideoTracks()[0];
-      veil.hidden = true;
-      $('#shutter').disabled = false;
-      setZoom(1);
-    } catch (e) {
-      const msg = e.name === 'NotAllowedError'
-        ? '相機權限未允許。請點網址列左側的網站設定，將「相機」改為允許，再重新整理。'
-        : e.name === 'NotFoundError'
-          ? '找不到可用的相機。'
-          : '相機啟動失敗：' + (e.message || e);
-      showMessage(msg, true);
-    } finally {
-      $('#start').disabled = false;
-      $('#start').textContent = '開啟相機';
+    }, 1000);
+  });
+  zoomSeg.addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-z]');
+    if (!btn) return;
+    setZoom(Number(btn.dataset.z));
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.code === 'Space') {
+      e.preventDefault();
+      takeShot();
     }
-  }
-
-  function setZoom(z) {
-    zoom = Math.max(1, Math.min(3, z));
-
-    if (track && track.getCapabilities) {
-      const caps = track.getCapabilities();
-      if (caps.zoom && zoom >= caps.zoom.min && zoom <= caps.zoom.max) {
-        track.applyConstraints({ advanced: [{ zoom }] }).catch(() => {});
-      }
+    if (e.key >= '0' && e.key <= '9') {
+      const n = Number(e.key);
+      if (n >= 1 && n <= 9) setSelectedTemplate(Math.min(n - 1, templates.length - 1));
+      if (n === 0) setSelectedTemplate(0);
     }
+  });
+}
 
-    video.style.transform = `${facing === 'user' ? 'scaleX(-1) ' : ''}scale(${zoom})`;
-    $('#zoomLabel').textContent = zoom + '×';
-  }
+function init(){
+  renderTemplateCards();
+  renderDetail();
+  setSelectedTemplate(0);
+  applyRatioMode();
+  bindEvents();
+  drawGuides();
+  const obs = new ResizeObserver(() => drawGuides());
+  obs.observe(vp);
+  setZoom(1);
+}
 
-  async function switchCamera() {
-    facing = facing === 'environment' ? 'user' : 'environment';
-    if (stream) {
-      await startCamera();
-    }
-  }
-
-  function capturePhoto() {
-    if (!stream || !video.videoWidth) return;
-
-    const vw = video.videoWidth;
-    const vh = video.videoHeight;
-    const rect = camera.getBoundingClientRect();
-    const targetRatio = rect.width / rect.height;
-
-    let cw, ch;
-    if (vw / vh > targetRatio) {
-      ch = vh;
-      cw = vh * targetRatio;
-    } else {
-      cw = vw;
-      ch = vw / targetRatio;
-    }
-
-    const sx = (vw - cw) / 2;
-    const sy = (vh - ch) / 2;
-    const canvas = document.createElement('canvas');
-    canvas.width = Math.round(cw / zoom);
-    canvas.height = Math.round(ch / zoom);
-
-    const ctx = canvas.getContext('2d');
-    if (facing === 'user') {
-      ctx.translate(canvas.width, 0);
-      ctx.scale(-1, 1);
-    }
-
-    ctx.drawImage(video, sx, sy, cw, ch, 0, 0, canvas.width, canvas.height);
-
-    canvas.toBlob(blob => {
-      if (!blob) return;
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `人像構圖_${Date.now()}.jpg`;
-      const img = document.createElement('img');
-      img.src = url;
-      img.alt = '拍攝照片';
-      a.appendChild(img);
-      $('#shots').prepend(a);
-      a.addEventListener('click', () => setTimeout(() => URL.revokeObjectURL(url), 60000), { once: true });
-    }, 'image/jpeg', 0.92);
-  }
-
-  function bindEvents() {
-    $('#start').addEventListener('click', startCamera);
-    $('#switch').addEventListener('click', switchCamera);
-    $('#shutter').addEventListener('click', capturePhoto);
-    $('#zoomOut').addEventListener('click', () => setZoom(zoom - .5));
-    $('#zoomIn').addEventListener('click', () => setZoom(zoom + .5));
-
-    $('#ratio').addEventListener('click', e => {
-      $('#app').classList.toggle('ratio916', !$('#app').classList.contains('ratio916'));
-      const is916 = $('#app').classList.contains('ratio916');
-      $('#ratio').textContent = is916 ? '改為 3:4' : '改為 9:16';
-      $('#ratio').setAttribute('aria-pressed', String(is916));
-      camera.classList.toggle('ratio916', is916);
-      requestAnimationFrame(drawGuide);
-    });
-
-    $('#grid').addEventListener('click', e => {
-      gridOn = !gridOn;
-      $('#grid').classList.toggle('active', gridOn);
-      $('#grid').setAttribute('aria-pressed', String(gridOn));
-      drawGuide();
-    });
-  }
-
-  function init() {
-    makeTemplates();
-    selectTemplate(0);
-    bindEvents();
-    new ResizeObserver(drawGuide).observe(camera);
-    window.addEventListener('resize', drawGuide);
-  }
-
-  init();
-})();
+init();
 </script>
 </body>
 </html>
