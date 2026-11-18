@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>人像構圖相機</title>
+<title>構圖相機</title>
 <style>
 :root{
   --bg:#0e0f11; --panel:#16181b; --panel2:#1e2125; --line:#2a2e34;
@@ -13,47 +13,67 @@
   color-scheme:dark;
 }
 *{box-sizing:border-box}
-html,body{margin:0;background:var(--bg);color:var(--text);font-family:"PingFang TC","Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif;-webkit-text-size-adjust:100%;line-height:1.55}
+html,body{margin:0;background:var(--bg);color:var(--text);
+  font-family:"PingFang TC","Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif;
+  -webkit-text-size-adjust:100%;line-height:1.55}
 button{font:inherit;color:inherit;cursor:pointer}
 a{color:var(--info)}
 header{padding:14px 16px 4px;max-width:1280px;margin:0 auto}
 h1{font-size:20px;margin:0 0 2px;letter-spacing:.02em}
 header p{margin:0;color:var(--muted);font-size:13px}
+
 .layout{display:grid;grid-template-columns:1fr;gap:18px;padding:10px 16px 40px;max-width:1280px;margin:0 auto}
 @media (min-width:960px){
   .layout{grid-template-columns:minmax(340px,500px) 1fr;align-items:start}
   .cam-col{position:sticky;top:12px}
 }
-.viewport{position:relative;overflow:hidden;border-radius:var(--r);background:#000;aspect-ratio:3/4;width:min(100%, calc((100vh - 260px) * .75));margin:0 auto;touch-action:manipulation}
+
+/* ── 相機 ── */
+.viewport{position:relative;overflow:hidden;border-radius:var(--r);background:#000;
+  aspect-ratio:3/4;width:min(100%, calc((100vh - 260px) * .75));margin:0 auto;touch-action:manipulation}
 .viewport[data-ratio="9:16"]{aspect-ratio:9/16;width:min(100%, calc((100vh - 260px) * .5625))}
 @media (max-width:959px){
   .viewport{width:min(100%, calc((100svh - 240px) * .75))}
   .viewport[data-ratio="9:16"]{width:min(100%, calc((100svh - 240px) * .5625))}
 }
+/* ★ 2026-11-18：.ph 的 display:flex 蓋掉了 hidden 屬性，相機開了之後灰底還蓋在畫面上（看起來像相機沒開）。
+   hidden 一律優先，其他設了 display 的元件（按鈕、提示條）也不會再犯 */
+[hidden]{display:none !important}
 video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform-origin:center;background:#000}
-.ph{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:linear-gradient(180deg,#4b5a6b 0%,#69798a 46%,#59605a 62%,#3f443f 100%);text-align:center;padding:24px}
+.ph{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;
+  background:linear-gradient(180deg,#4b5a6b 0%,#69798a 46%,#59605a 62%,#3f443f 100%);text-align:center;padding:24px}
 .ph .msg{font-size:13px;color:#eef1f4;background:rgba(0,0,0,.45);padding:6px 10px;border-radius:8px;max-width:90%}
-.start{background:var(--accent);color:#1b1b1b;border:0;border-radius:999px;padding:12px 22px;font-weight:700;font-size:16px;box-shadow:0 4px 18px rgba(0,0,0,.35);position:relative;z-index:3;pointer-events:auto}
-#overlay,#hzn{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;font-family:inherit}
+.start{background:var(--accent);color:#1b1b1b;border:0;border-radius:999px;padding:12px 22px;font-weight:700;font-size:16px;
+  box-shadow:0 4px 18px rgba(0,0,0,.35);position:relative;z-index:3;pointer-events:auto}
+#overlay,#hzn,#poseL{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;font-family:inherit}
 .hud{position:absolute;inset:0;pointer-events:none}
-.viewport.rot #overlay,.viewport.rot .hud{transform:rotate(180deg)}
-.hpill{position:absolute;font-size:12.5px;font-weight:600;padding:4px 10px;border-radius:999px;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);white-space:nowrap}
+.viewport.rot #overlay,.viewport.rot .hud,.viewport.rot #poseL{transform:rotate(180deg)}
+/* 構圖對了（人對進輪廓／角度到位）：輪廓整個變綠 */
+.viewport.aligned .fig-line{stroke:var(--ok);fill:rgba(74,222,128,.14)}
+#hudPose{left:50%;bottom:10px;transform:translateX(-50%);border:1px solid transparent;white-space:normal;text-align:center;max-width:92%;line-height:1.35}
+#hudPose.ok{background:rgba(22,101,52,.85);border-color:var(--ok)}
+#hudPose.bad{background:rgba(120,72,0,.85);border-color:var(--accent)}
+.hpill{position:absolute;font-size:12.5px;font-weight:600;padding:4px 10px;border-radius:999px;background:rgba(0,0,0,.55);
+  backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);white-space:nowrap}
 .capbar{display:flex;gap:10px;align-items:baseline;justify-content:center;flex-wrap:wrap;margin:8px auto 0;font-size:13.5px;text-align:center}
 #hudName{font-weight:700}
 #hudMn{color:var(--accent);font-weight:600}
 #hudPitch{right:10px;top:10px;border:1px solid transparent}
 #hudPitch.ok{background:rgba(22,101,52,.82);border-color:var(--ok)}
 #hudPitch.bad{background:rgba(120,72,0,.82);border-color:var(--accent)}
-#hudBanner{left:50%;top:44px;transform:translateX(-50%);background:rgba(160,40,30,.85);white-space:normal;text-align:center;max-width:88%;line-height:1.4}
+#hudBanner{left:50%;top:44px;transform:translateX(-50%);background:rgba(160,40,30,.85);white-space:normal;text-align:center;
+  max-width:88%;line-height:1.4}
 .level{position:absolute;left:50%;top:50%;width:46%;height:0;transform:translate(-50%,-50%)}
 .lv-t,.lv-h{position:absolute;left:0;right:0;top:0;height:0;transition:transform .08s linear}
 .lv-t i{position:absolute;top:-1px;width:17%;height:2px;background:rgba(255,255,255,.9);box-shadow:0 0 3px rgba(0,0,0,.6)}
 .lv-t i:first-child{left:0}.lv-t i:last-child{right:0}
 .lv-h::after{content:"";position:absolute;left:21%;right:21%;top:-1px;height:2px;background:rgba(255,255,255,.9);box-shadow:0 0 3px rgba(0,0,0,.6)}
 .level.ok .lv-t i,.level.ok .lv-h::after{background:var(--accent)}
-.count{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:96px;font-weight:800;color:#fff;text-shadow:0 4px 24px rgba(0,0,0,.6)}
+.count{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:96px;font-weight:800;
+  color:#fff;text-shadow:0 4px 24px rgba(0,0,0,.6)}
 .flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;transition:opacity .25s}
 .flash.on{opacity:.85;transition:none}
+
 .controls{margin:10px auto 0;display:flex;flex-direction:column;gap:10px;align-items:center}
 .chips{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
 .chip{background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:5px 12px;font-size:13px;color:var(--muted)}
@@ -69,21 +89,21 @@ video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transfor
 .side-btns{display:flex;gap:8px;justify-self:end}
 .round{width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:var(--panel2);font-size:13px;color:var(--muted)}
 .round[aria-pressed="true"]{color:#1b1b1b;background:var(--accent);border-color:var(--accent);font-weight:700}
-.shots{display:flex;gap:8px;overflow-x:auto;width:100%;padding:2px 0}
-.shots:empty{display:none}
-.shots a{flex:0 0 auto;display:block;border-radius:8px;overflow:hidden;border:1px solid var(--line)}
-.shots img{display:block;height:84px;width:auto}
 .hint{font-size:12px;color:var(--dim);text-align:center;margin:0}
+
+/* ── 模板 ── */
 .sec-title{font-size:13px;color:var(--muted);margin:0 0 8px;font-weight:600;letter-spacing:.04em}
 .tpl-list{display:flex;gap:10px;overflow-x:auto;padding:2px 2px 8px;scroll-snap-type:x proximity}
 @media (min-width:960px){.tpl-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));overflow:visible}}
-.tpl-card{flex:0 0 auto;width:200px;display:flex;gap:10px;align-items:center;text-align:left;background:var(--panel);border:1.5px solid var(--line);border-radius:12px;padding:8px;scroll-snap-align:start}
+.tpl-card{flex:0 0 auto;width:200px;display:flex;gap:10px;align-items:center;text-align:left;background:var(--panel);
+  border:1.5px solid var(--line);border-radius:12px;padding:8px;scroll-snap-align:start}
 @media (min-width:960px){.tpl-card{width:auto}}
 .tpl-card svg{width:54px;height:72px;flex:0 0 auto;border-radius:6px;display:block}
 .tpl-card b{display:block;font-size:14.5px}
 .tpl-card span{display:block;font-size:12px;color:var(--muted);line-height:1.4}
 .tpl-card .k{font-size:11px;color:var(--dim)}
 .tpl-card.on{border-color:var(--accent);background:#221f14}
+
 .detail{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px 16px 12px;margin-top:12px}
 .dhead{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
 .dhead h2{margin:0;font-size:20px}
@@ -101,30 +121,195 @@ video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transfor
 ul.avoid{list-style:none;padding-left:0}
 ul.avoid li::before{content:"✕";color:var(--warn);font-weight:700;margin-right:8px}
 .src{font-size:12.5px;color:var(--dim);margin:8px 0 0;border-top:1px solid var(--line);padding-top:8px}
+.src .note{display:inline-block;margin-top:4px;color:var(--dim);font-size:12px}
+/* ── 照片匣（多選）：電腦放在快門下面、手機做成滑上來的面板 ── */
+.shots-tray{width:100%}
+.shots-tray.empty{display:none}
+.tray-head{display:flex;align-items:center;gap:10px;margin:4px 0 6px}
+.tray-head b{flex:1;font-size:15px}
+.tray-tip{display:block;font-size:12.5px;color:var(--muted);margin:0 0 8px;line-height:1.5}
+.tray-tip.warn{color:#ffb4a8}
+.shots{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:6px;max-height:320px;overflow-y:auto;padding:2px}
+.shots:empty{display:none}
+.ph{position:relative;padding:0;border:2px solid transparent;border-radius:9px;overflow:hidden;background:#1e2125;aspect-ratio:3/4}
+.ph img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
+.ph .ck{position:absolute;right:5px;top:5px;width:22px;height:22px;border-radius:50%;border:2px solid #fff;background:rgba(0,0,0,.35);
+  display:grid;place-items:center;font-size:13px;font-weight:800;color:#1b1b1b}
+.ph.sel{border-color:var(--accent)}
+.ph.sel .ck{background:var(--accent);border-color:var(--accent)}
+.ph.sel .ck::after{content:"✓"}
+.ph .sv{position:absolute;left:5px;bottom:5px;font-size:10.5px;font-weight:700;background:rgba(22,101,52,.9);color:#fff;border-radius:6px;padding:1px 6px}
+.tray-act{display:flex;gap:8px;margin-top:10px}
+.act{flex:1;height:42px;border-radius:12px;border:1px solid var(--glass-b);background:var(--glass);color:#e6e8eb;font-weight:700;font-size:14px}
+.act.primary{background:var(--accent);color:#1b1b1b;border-color:var(--accent)}
+.act.danger{color:#ffb4a8;flex:0 0 auto;padding:0 16px}
+.act:disabled{opacity:.35}
+.chip.plain::before{display:none}
+.toast{position:fixed;left:50%;bottom:calc(120px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:50;background:rgba(20,22,26,.95);
+  color:#fff;padding:10px 16px;border-radius:12px;font-size:14px;box-shadow:0 6px 24px rgba(0,0,0,.4);max-width:88%;text-align:center}
+/* 存圖說明（分享選單叫不出來時才出現） */
+.savehelp{position:fixed;inset:0;z-index:40;background:rgba(0,0,0,.88);display:flex;align-items:center;justify-content:center;padding:20px}
+.savehelp .box{max-width:420px;width:100%;text-align:center}
+.savehelp img{max-width:100%;max-height:62vh;border-radius:10px;display:block;margin:0 auto 14px}
+.savehelp p{font-size:14.5px;line-height:1.6;color:#eef0f2;margin:0 0 16px}
+/* iPhone 版 Chrome：照片匣的長按選單關掉——那個「儲存圖片」一定失敗，改用點一下走分享選單 */
+.crios .shots img,.crios .last img{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+
 details.box{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:12px 16px;margin-top:12px}
 details.box summary{cursor:pointer;font-weight:600;font-size:14.5px}
 details.box ul{font-size:14px;padding-left:20px;margin:10px 0 4px}
 details.box li{margin:4px 0}
 details.box .s{color:var(--dim);font-size:12px}
+
+/* ── 版面骨架（電腦與手機共用的部分） ── */
+.tpl-strip,.last,.sheet-head,.how,.cats{display:none}
+.tpl-group{grid-column:1/-1;font-size:13px;color:var(--muted);font-weight:700;letter-spacing:.06em;margin:6px 0 -2px}
+.tpl-group:first-child{margin-top:0}
+.cam-col{display:flex;flex-direction:column}
+.vpwrap{order:1}
+.topbar{order:2;display:flex;align-items:center;justify-content:center;gap:10px}
+.controls{order:3}
+.capbar{margin:8px 0 0}
+.tools{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;align-items:center}
+.row2 .shutter{grid-column:2}
+.row2 .side-btns{grid-column:3}
+#backdrop{position:fixed;inset:0;z-index:19;background:rgba(0,0,0,.55);display:none}
+.x{width:34px;height:34px;border-radius:50%;border:0;background:var(--panel2);color:var(--muted);font-size:15px;flex:0 0 auto}
+
+/* ── 手機版（2026-11-18）：整個螢幕就是相機，跟手機內建相機一樣一頁不捲。
+   上：模板名＋口訣＋「怎麼拍」；中：取景框（照可用高度縮放，JS fitViewport）；
+   下：倍率與開關一列、模板一列（左右滑）、快門一列。說明與照片做成從下面滑上來的面板。 */
+@media (max-width:959px){
+  html,body{height:100%;overflow:hidden;overscroll-behavior:none}
+  body{touch-action:manipulation}
+  header{display:none}
+  .layout{display:block;padding:0;max-width:none}
+  .cam-col{position:fixed;inset:0;background:#000;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+  .topbar{order:0;justify-content:space-between;padding:6px 10px 6px 14px;min-height:48px}
+  .capbar{margin:0;flex:1;min-width:0;flex-direction:column;align-items:flex-start;gap:0;line-height:1.3;text-align:left;flex-wrap:nowrap}
+  .capbar span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  #hudName{font-size:15px}
+  #hudMn{font-size:12px}
+  .how{display:block;flex:0 0 auto;border:1px solid var(--accent);color:var(--accent);background:transparent;border-radius:999px;
+    padding:6px 14px;font-size:13.5px;font-weight:700}
+  .vpwrap{flex:1 1 0;min-height:0;display:flex;align-items:center;justify-content:center;overflow:hidden}
+  .viewport{border-radius:0;margin:0;flex:0 0 auto}
+  .controls{margin:0;padding:8px 0 6px;gap:8px;align-items:stretch}
+  .tools{flex-wrap:nowrap;justify-content:flex-start;overflow-x:auto;padding:0 10px;scrollbar-width:none}
+  .tools::-webkit-scrollbar,.tpl-strip::-webkit-scrollbar{display:none}
+  .tools .chips{flex-wrap:nowrap}
+  .tools .zoom,.chip{flex:0 0 auto;white-space:nowrap}
+  .tpl-strip{display:flex;gap:6px;overflow-x:auto;padding:0 10px;scroll-snap-type:x proximity;scrollbar-width:none}
+  .mini{flex:0 0 auto;display:flex;align-items:center;gap:6px;padding:4px 10px 4px 4px;border-radius:10px;
+    border:1.5px solid var(--line);background:var(--panel);scroll-snap-align:center;text-align:left}
+  .mini svg{width:27px;height:36px;border-radius:4px;display:block}
+  .mini b{font-size:13px;white-space:nowrap;font-weight:600}
+  .mini.on{border-color:var(--accent);background:#221f14}
+  .mini.on b{color:var(--accent)}
+  .cats{display:flex;justify-content:center;gap:26px;margin:-2px 0 -4px}
+  .cats button{background:none;border:0;color:var(--muted);padding:2px 6px;font-size:13.5px;font-weight:700;letter-spacing:.1em}
+  .cats button.on{color:var(--accent)}
+  .controls{gap:7px}
+  .row2{max-width:none;padding:0 22px}
+  .last{display:block;grid-column:1;justify-self:start;position:relative;width:46px;height:46px;border-radius:10px;
+    overflow:hidden;border:2px solid #fff;padding:0;background:#222}
+  .last img{width:100%;height:100%;object-fit:cover;display:block}
+  .last .n{position:absolute;right:0;bottom:0;background:var(--accent);color:#1b1b1b;font-size:11px;font-weight:800;
+    border-radius:6px 0 0 0;padding:0 5px;line-height:1.5}
+  .shutter{width:66px;height:66px}
+  .hint{display:none}
+
+  .shots-tray,.tpl-col{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--bg);border-radius:16px 16px 0 0;
+    padding:10px 12px calc(16px + env(safe-area-inset-bottom));transform:translateY(105%);transition:transform .25s ease;
+    box-shadow:0 -8px 30px rgba(0,0,0,.5)}
+  .tpl-col{max-height:88vh;max-height:88dvh;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+  body.sheet .tpl-col,body.tray .shots-tray{transform:none}
+  body.sheet #backdrop,body.tray #backdrop{display:block}
+  .sheet-head,.tray-head{display:flex;align-items:center;gap:10px;margin:0 0 8px}
+  .sheet-head b,.tray-head b{flex:1;font-size:16px}
+  .tpl-col .sec-title,.tpl-col #tplList{display:none}
+  .tpl-col .detail{margin-top:0}
+  .shots{grid-template-columns:repeat(3,1fr);max-height:52vh;max-height:52dvh}
+  .shots-tray.empty{display:block}                               /* 手機的照片匣是面板，空的也照樣能開 */
+}
+
+/* ── 視覺（2026-11-18 第二版）：降噪——開關不再整排亮黃，「開著」只用一顆小燈；
+   黃色只留給「選中的模板／目前倍率」，綠色只留給「構圖對了」（輪廓、快門外圈一起變綠） ── */
+:root{--glass:rgba(255,255,255,.08);--glass-b:rgba(255,255,255,.14)}
+body{background:#0b0c0e}
+.chip{background:var(--glass);border:1px solid var(--glass-b);color:#c3c8cf;font-size:12.5px;padding:6px 12px;
+  display:inline-flex;align-items:center;gap:6px;transition:background .15s,border-color .15s,color .15s}
+.chip::before{content:"";width:6px;height:6px;border-radius:50%;background:#5b616a;transition:background .15s,box-shadow .15s}
+.chip[aria-pressed="true"]{background:rgba(255,211,77,.12);border-color:rgba(255,211,77,.45);color:#ffe6a0;font-weight:600}
+.chip[aria-pressed="true"]::before{background:var(--accent);box-shadow:0 0 6px rgba(255,211,77,.8)}
+.zoom{background:var(--glass);border:1px solid var(--glass-b);padding:3px;gap:2px}
+.zoom button{min-width:38px;height:30px;padding:0 8px;font-size:12.5px;color:#c3c8cf;font-weight:600}
+.zoom button.on{background:rgba(0,0,0,.7);color:var(--accent)}
+.round{width:44px;height:44px;background:var(--glass);border:1px solid var(--glass-b);color:#e6e8eb;display:grid;place-items:center;position:relative;padding:0}
+.round svg{width:22px;height:22px}
+.round[aria-pressed="true"]{background:rgba(255,211,77,.14);border-color:var(--accent);color:var(--accent)}
+.round .b{position:absolute;right:-4px;top:-4px;background:var(--accent);color:#1b1b1b;font-size:10px;font-weight:800;
+  border-radius:999px;padding:0 4px;line-height:15px;display:none}
+.round[aria-pressed="true"] .b{display:block}
+.shutter{width:70px;height:70px;border:0;background:transparent;box-shadow:none;position:relative;padding:0;border-radius:50%}
+.shutter::before{content:"";position:absolute;inset:0;border-radius:50%;border:4px solid #fff;transition:border-color .2s,box-shadow .2s}
+.shutter::after{content:"";position:absolute;inset:8px;border-radius:50%;background:#fff;transition:transform .1s,background .2s}
+.shutter:active{transform:none}
+.shutter:active::after{transform:scale(.9)}
+.shutter.ready::before{border-color:var(--ok);box-shadow:0 0 0 3px rgba(74,222,128,.22),0 0 18px rgba(74,222,128,.55)}
+.shutter.ready::after{background:#ecfff2}
+.hpill{font-size:12.5px;background:rgba(10,12,15,.62);padding:5px 11px;box-shadow:0 2px 10px rgba(0,0,0,.25);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.how{align-items:center;gap:6px}
+.how svg{width:16px;height:16px;flex:0 0 auto}
+.tpl-card{transition:border-color .15s,background .15s}
+.tpl-card:hover{border-color:#3a3f47}
+.tpl-card.on{box-shadow:0 0 0 3px rgba(255,211,77,.12)}
+.viewport{box-shadow:0 10px 40px rgba(0,0,0,.45)}
+.ph .msg{font-size:13.5px;padding:8px 12px;border-radius:10px;line-height:1.5}
+.ph .cam-ic{width:44px;height:44px;opacity:.85}
+.start{font-size:15px}
+@media (max-width:959px){
+  .viewport{box-shadow:none}
+  #hudMn{color:rgba(255,211,77,.9);font-weight:500}
+  .how{display:inline-flex;background:var(--glass);border:1px solid var(--glass-b);color:#eef0f2;padding:7px 12px;font-weight:600}
+  .mini{background:rgba(255,255,255,.06);border-color:transparent;border-radius:12px;padding:4px 11px 4px 4px}
+  .mini svg{border-radius:7px}
+  .mini b{color:#d5d9de}
+  .mini.on{background:rgba(255,211,77,.12);border-color:rgba(255,211,77,.75)}
+  .tpl-col,.shots-tray{border-radius:20px 20px 0 0;padding-top:6px;background:#121417}
+  .sheet-head,.tray-head{padding-top:14px;position:relative}
+  .sheet-head::before,.tray-head::before{content:"";position:absolute;left:50%;top:2px;width:38px;height:4px;border-radius:2px;
+    background:#3a3f47;transform:translateX(-50%)}
+  .last{border-radius:12px;border:2px solid rgba(255,255,255,.9)}
+}
 </style>
 </head>
 <body>
 <header>
-  <h1>人像構圖相機</h1>
-  <p>選一個模板 → 開相機 → 把人對進黃色輪廓。九宮格、標示線、手機高度與角度照兩支電獺少女影片＋一篇 Look Pretty 文章整理（出處在每個模板下面）。</p>
+  <h1>構圖相機</h1>
+  <p>打開就是相機（瀏覽器問的時候按「允許」）→ 選模板（人像／美食／風景／咖啡廳）→ 對進黃色框、水平線對上藍線，對了會變綠。九宮格、標示線、手機高度與角度照兩支電獺少女影片＋一篇 Look Pretty 文章整理（出處在每個模板下面）。</p>
 </header>
 
 <main class="layout">
   <section class="cam-col">
+    <div class="topbar">
+      <div class="capbar"><span id="hudName"></span><span id="hudMn"></span></div>
+      <button class="how" id="btnHow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.7v.1"/></svg>怎麼拍</button>
+    </div>
+    <div class="vpwrap" id="vpwrap">
     <div class="viewport" id="vp" data-ratio="3:4">
       <video id="video" playsinline muted autoplay></video>
       <div class="ph" id="ph">
-        <button class="start" id="btnStart">開啟相機</button>
-        <div class="msg" id="phMsg">還沒開相機——先看黃色輪廓的位置也可以</div>
+        <svg class="cam-ic" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8.5A2.5 2.5 0 0 1 5.5 6h1.8l1.4-2h6.6l1.4 2h1.8A2.5 2.5 0 0 1 21 8.5v9a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17.5z"/><circle cx="12" cy="12.8" r="3.8"/></svg>
+        <button class="start" id="btnStart" hidden>開啟相機</button>
+        <div class="msg" id="phMsg">正在開啟相機…瀏覽器問的時候按「允許」</div>
       </div>
       <svg id="overlay" xmlns="http://www.w3.org/2000/svg"></svg>
       <svg id="hzn" xmlns="http://www.w3.org/2000/svg" style="display:none"></svg>
+      <svg id="poseL" xmlns="http://www.w3.org/2000/svg"></svg>
       <div class="hud" id="hud">
+        <div class="hpill" id="hudPose" hidden></div>
         <div class="hpill" id="hudPitch" hidden></div>
         <div class="hpill" id="hudBanner" hidden></div>
         <div class="level" id="level" hidden><div class="lv-t" id="lvT"><i></i><i></i></div><div class="lv-h" id="lvH"></div></div>
@@ -132,34 +317,60 @@ details.box .s{color:var(--dim);font-size:12px}
       </div>
       <div class="flash" id="flash"></div>
     </div>
-    <div class="capbar"><span id="hudName"></span><span id="hudMn"></span></div>
+    </div>
 
     <div class="controls">
-      <div class="chips">
-        <button class="chip" id="btnGrid" aria-pressed="true">九宮格</button>
-        <button class="chip" id="btnFig" aria-pressed="true">人物輪廓</button>
-        <button class="chip" id="btnLabels" aria-pressed="true">標示</button>
-        <button class="chip" id="btnHzn" aria-pressed="true">背景水平線</button>
-        <button class="chip" id="btnRatio" aria-pressed="false">9:16</button>
-        <button class="chip" id="btnMirror" aria-pressed="false" hidden>左右對調</button>
-        <button class="chip" id="btnRot" aria-pressed="false" hidden>畫面轉 180°</button>
-      </div>
-      <div class="row2">
+      <div class="tools">
         <div class="zoom" id="zoomSeg">
           <button data-z="0.5">.5x</button><button data-z="1">1x</button><button data-z="2">2x</button>
         </div>
-        <button class="shutter" id="shutter" aria-label="拍照" disabled></button>
-        <div class="side-btns">
-          <button class="round" id="btnTimer" aria-pressed="false" title="3 秒倒數">3s</button>
-          <button class="round" id="btnSwitch" title="切換前後鏡頭" hidden>⟲</button>
+        <div class="chips">
+          <button class="chip" id="btnGrid" aria-pressed="true">九宮格</button>
+          <button class="chip" id="btnFig" aria-pressed="true">人物輪廓</button>
+          <button class="chip" id="btnPose" aria-pressed="true">人物偵測</button>
+          <button class="chip" id="btnAuto" aria-pressed="false">自動拍</button>
+          <button class="chip" id="btnLabels" aria-pressed="true">標示</button>
+          <button class="chip" id="btnHzn" aria-pressed="true">背景水平線</button>
+          <button class="chip" id="btnRatio" aria-pressed="false">9:16</button>
+          <button class="chip" id="btnMirror" aria-pressed="false" hidden>左右對調</button>
+          <button class="chip" id="btnRot" aria-pressed="false" hidden>畫面轉 180°</button>
         </div>
       </div>
-      <div class="shots" id="shots"></div>
-      <p class="hint" id="hint">照片點縮圖就會下載。電腦：空白鍵拍照、數字鍵 1–9、0 換模板。</p>
+      <div class="tpl-strip" id="tplStrip"></div>
+      <div class="cats" id="cats"></div>
+      <div class="row2">
+        <button class="last" id="lastShot" hidden aria-label="看剛拍的照片"><img alt=""><span class="n" id="lastN"></span></button>
+        <button class="shutter" id="shutter" aria-label="拍照" disabled></button>
+        <div class="side-btns">
+          <button class="round" id="btnTimer" aria-pressed="false" title="3 秒倒數" aria-label="3 秒倒數"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13.5" r="7.5"/><path d="M12 9.8v3.9l2.4 1.5M9.5 3h5M12 3v2.8"/></svg><span class="b">3s</span></button>
+          <button class="round" id="btnSwitch" title="切換前後鏡頭" aria-label="切換前後鏡頭" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 9.5A8 8 0 0 1 18.4 6.6L20 8M20 4v4h-4M19.5 14.5a8 8 0 0 1-13.9 2.9L4 16M4 20v-4h4"/></svg></button>
+        </div>
+      </div>
+      <div class="shots-tray" id="tray">
+        <div class="tray-head">
+          <b id="trayTitle">照片</b>
+          <button class="chip plain" id="btnSelAll">全選</button>
+          <button class="x" id="btnTrayClose" aria-label="關閉">✕</button>
+        </div>
+        <p class="tray-tip" id="trayTip"></p>
+        <div class="shots" id="shots"></div>
+        <div class="tray-act">
+          <button class="act primary" id="btnSave" disabled>存到相簿</button>
+          <button class="act" id="btnDl" disabled>下載</button>
+          <button class="act danger" id="btnDel" disabled>刪除</button>
+        </div>
+      </div>
+      <p class="hint" id="hint">電腦：空白鍵拍照、數字鍵 1–9、0 換模板。照片點一下選取，再按「下載」。</p>
     </div>
+    <!-- ★ 暗底一定要放在 .cam-col 裡面（2026-11-18 實測）：手機版 .cam-col 是 position:fixed，自己成一層，
+         照片匣在它裡面，z-index 再高也蓋不過外面的東西。暗底放外面時整片蓋在照片匣上，
+         點照片、點「存到相簿」全點到暗底（而暗底一點就收面板＝「點一下就跳掉」）。
+         放裡面：暗底(19) < 照片匣(20) 同一層；「怎麼拍」面板在 .cam-col 外面、本來就在整層之上。 -->
+    <div id="backdrop"></div>
   </section>
 
-  <section class="tpl-col">
+  <section class="tpl-col" id="sheet">
+    <div class="sheet-head"><b>怎麼拍</b><button class="x" id="btnSheetClose" aria-label="關閉">✕</button></div>
     <h2 class="sec-title">選模板</h2>
     <div class="tpl-list" id="tplList"></div>
     <article class="detail" id="detail"></article>
@@ -169,439 +380,1946 @@ details.box .s{color:var(--dim);font-size:12px}
       <ul>
         <li><b>擦鏡頭</b>：指紋會讓畫面霧、顏色髒。<span class="s">影片1 0:55／影片2 7:24</span></li>
         <li><b>開九宮格</b>：這頁已經幫你開了；用手機內建相機時記得在設定裡打開。<span class="s">影片1 1:06／影片2 0:22</span></li>
-        <li><b>臉面對光（順光）</b>：最安全的拍法，皮膚乾淨、眼神有光。想拍氛圍感再試逆光或光影交錯<span class="s">影片1 1:35／影片2 5:18</span></li>
-        <li><b>離鏡頭一臂</b>：太近會失去身體比例；太遠則會縮小人物。<span class="s">影片1 3:30／影片2 2:38</span></li>
-        <li><b>目線與肩膀保持水平</b>：不要仰頭低頭過頭，容易讓輪廓失真。<span class="s">影片1 4:40／影片2 4:30</span></li>
+        <li><b>臉面對光（順光）</b>：最安全的拍法，皮膚乾淨、眼神有光。想拍氛圍感再試逆光或光影交錯的地方。<span class="s">影片1 4:18／影片2 7:10</span></li>
+        <li><b>請對方看鏡頭</b>：不要往上或往下看，眼睛才有神。<span class="s">影片1 3:06</span></li>
+        <li><b>一次多拍幾張</b>：閉眼、晃到很常見，拍完再挑。<span class="s">影片1 2:13</span></li>
+        <li><b>拍壞的先別刪</b>：打開相簿的裁切也有九宮格，照同樣原理裁一次常常就救回來。<span class="s">影片2 3:09</span></li>
+      </ul>
+    </details>
+
+    <details class="box">
+      <summary>這頁能做的與不能做的</summary>
+      <ul>
+        <li><b>人物偵測</b>：人像模板會在瀏覽器裡辨識人的眼睛、肩膀、髖、膝蓋、腳，告訴你「走近一點／往後退／手機往左轉」；人對進輪廓就整個變綠。畫面不會上傳，但第一次要下載辨識模型（約 6MB），手機要能上網。</li>
+        <li><b>自動拍</b>：打開後，構圖對了（輪廓變綠）停 0.7 秒就自動拍一張；要再拍一張，先讓構圖跑掉再對回來。美食、風景要靠陀螺儀判斷角度，電腦上不會自動拍。</li>
+        <li><b>美食、風景、咖啡廳</b>：下面切換分類。出處是另外找的攝影文章（T客邦、Tatler、TVBS、PRO360、Bella 等），附在每個模板下面；文章沒講、是這頁自己加的部分也會註明。</li>
+        <li><b>背景水平線</b>：地面平的話，照片裡遠處的地平線、海平線一定會穿過對方身上「跟手機一樣高」的地方。藍色虛線是這個模板要的位置——背景的水平線落在虛線上，手機高度就對了。</li>
+        <li><b>手機角度</b>：手機有陀螺儀時，畫面上多一條藍色實線＝現在實際的水平線，跟虛線疊在一起會變綠，代表高度與角度都對；右上角同時顯示鏡頭往上／往下幾度。電腦視訊鏡頭沒有陀螺儀，就看背景裡的水平線、照鏡位圖擺。</li>
+        <li><b>倍率</b>：2x 在不支援變焦的瀏覽器會用「數位放大」（畫面一樣、畫質略降）。<b>0.5x 超廣角網頁通常叫不出來</b>——用手機內建相機切 0.5x，構圖照這個模板的框。</li>
+        <li><b>倒拿手機</b>：「更高挑全身」要把手機轉 180°。有陀螺儀時輪廓會自動轉正、存檔也會轉正；沒有的話按「畫面轉 180°」。</li>
+        <li><b>用手機開這頁</b>：瀏覽器規定網頁要在 https 網址下才能用相機；LINE／FB／IG 裡點開的網頁也不能用，要用 Safari 或 Chrome 開。電腦直接開這個檔案可以用視訊鏡頭。</li>
+        <li><b>存檔</b>：照片只存在你這台裝置的瀏覽器裡，不會上傳，存下來的是乾淨照片、不含輔助線。照片匣最多留 <b>50 張</b>，滿了自動清掉最舊的；清除瀏覽資料也會一起不見，所以拍完記得存。手機上點左下角的縮圖打開照片匣 → 點照片<b>選取（可多選、可全選）</b> → 按「存到相簿」→ iPhone 在分享選單選「儲存影像」；也可以按「下載」存進「檔案」App（iPhone）或「下載」資料夾（Android）。iPhone 版 Chrome 不要長按照片，那個「儲存圖片」會說沒有網路。</li>
       </ul>
     </details>
   </section>
 </main>
+<div class="savehelp" id="saveHelp" hidden>
+  <div class="box">
+    <img id="saveImg" alt="剛拍的照片">
+    <p id="saveTxt"></p>
+    <button class="start" id="saveClose">知道了</button>
+  </div>
+</div>
 
 <script>
-const templates = [
-  {
-    name:'半身照',
-    mnemonic:'Classic',
-    summary:'最常見、最穩定，人物在中間、下半身不要太小。',
-    params:[['位置','人物中心略偏中，臉部約在畫面 40% 高度'],['鏡頭高度','胸口至眼睛之間'],['重點','眼睛落在上方第一條線，身體不要太低'] ],
-    source:'影片 1 3:15／影片 2 4:12',
-    base: { headX:0.50, headY:0.18, headR:0.22, bodyW:0.42, top:0.15, bottom:0.86, horizon:0.32, label:'半身照·對準黃色輪廓' },
-    avoid:['頭頂太貼上邊','下半身完全被裁掉','肩膀歪斜']
-  },
-  {
-    name:'人物靠左',
-    mnemonic:'Left Lead',
-    summary:'人留在左側，空間留給背景與留白，適合拍感覺。',
-    params:[['位置','人物約在左側三分之一處'],['鏡頭高度','胸口高度'],['重點','右邊留白，比較輕鬆的景觀感'] ],
-    source:'影片 1 2:10／影片 2 7:08',
-    base: { headX:0.33, headY:0.20, headR:0.20, bodyW:0.36, top:0.16, bottom:0.90, horizon:0.38, label:'人物靠左·對準黃色輪廓' },
-    avoid:['人物貼太右','背景過於壅擠']
-  },
-  {
-    name:'膝上照',
-    mnemonic:'Knee Up',
-    summary:'拍腿部線條時非常好用，肩膀要不要太挺。',
-    params:[['位置','人頭在上方 1/4 處，腿部接近下線'],['鏡頭高度','胸口到眼睛高度'],['重點','不要讓膝蓋貼住下緣'] ],
-    source:'影片 1 5:50／影片 2 3:43',
-    base: { headX:0.50, headY:0.15, headR:0.19, bodyW:0.40, top:0.11, bottom:0.92, horizon:0.40, label:'膝上照·保持腰膝比例' },
-    avoid:['腳部被大幅裁切','膝蓋過度扭曲']
-  },
-  {
-    name:'全身照',
-    mnemonic:'Full Body',
-    summary:'人物到腳底，適合拍穿搭、站姿與動態。',
-    params:[['位置','全身要站直，腳貼底框'],['鏡頭高度','胸口高度'],['重點','頭頂留一點空間，腳尖不用超出框'] ],
-    source:'影片 1 4:22／影片 2 2:55',
-    base: { headX:0.50, headY:0.12, headR:0.18, bodyW:0.42, top:0.08, bottom:0.98, horizon:0.43, label:'全身照·腳部不要踩邊框' },
-    avoid:['腳尖斷掉','頭太貼上邊']
-  },
-  {
-    name:'三分法',
-    mnemonic:'Rule of Thirds',
-    summary:'人物放在三分線上，背景留白感自然。',
-    params:[['位置','人頭和上半身偏向左或右三分點'],['鏡頭高度','胸口高度'],['重點','讓背景有呼吸空間'] ],
-    source:'影片 1 1:55／影片 2 6:40',
-    base: { headX:0.32, headY:0.18, headR:0.20, bodyW:0.36, top:0.14, bottom:0.96, horizon:0.44, label:'三分法·人物略偏三分點' },
-    avoid:['人物卡在中間太硬','背景太滿']
-  },
-  {
-    name:'超廣角人景',
-    mnemonic:'Wide Story',
-    summary:'人景並重，適合帶場景感與氛圍。',
-    params:[['位置','人物放在中間偏下，留空間給場景'],['鏡頭高度','胸口到眼睛'],['重點','人物不要太靠下，避免腳剪掉'] ],
-    source:'影片 1 6:30／影片 2 8:12',
-    base: { headX:0.50, headY:0.20, headR:0.19, bodyW:0.43, top:0.16, bottom:0.86, horizon:0.35, label:'超廣角·留景不壓人' },
-    avoid:['腳部太貼下邊','遠景被截斷']
-  }
-];
+(() => {
+'use strict';
+const D2R = Math.PI / 180, R2D = 180 / Math.PI;
+const NS = 'http://www.w3.org/2000/svg';
+const $ = s => document.querySelector(s);
+const ACC = '#ffd34d', WARN = '#ff6b5a', INFO = '#7cc4ff', HZN = '#5ee0ff', OKC = '#4ade80';
+/* 手機主鏡頭（1x）直拍時，畫面長邊的半視角。推導：24–26mm 等效焦距、4:3 長邊 34.6mm → 全視角 67–72°，取 70°。
+   只用來把陀螺儀的仰俯角換成「水平線在畫面多高」；各家手機差幾度，水平線位置差不到畫面的 2%。 */
+const TAN_HALF_1X = Math.tan(35 * D2R);
 
-const vp = document.getElementById('vp');
-const video = document.getElementById('video');
-const overlay = document.getElementById('overlay');
-const hzn = document.getElementById('hzn');
-const ph = document.getElementById('ph');
-const btnStart = document.getElementById('btnStart');
-const btnGrid = document.getElementById('btnGrid');
-const btnFig = document.getElementById('btnFig');
-const btnLabels = document.getElementById('btnLabels');
-const btnHzn = document.getElementById('btnHzn');
-const btnRatio = document.getElementById('btnRatio');
-const btnMirror = document.getElementById('btnMirror');
-const btnRot = document.getElementById('btnRot');
-const btnSwitch = document.getElementById('btnSwitch');
-const btnTimer = document.getElementById('btnTimer');
-const shutter = document.getElementById('shutter');
-const zoomSeg = document.getElementById('zoomSeg');
-const shots = document.getElementById('shots');
-const tplList = document.getElementById('tplList');
-const detail = document.getElementById('detail');
-const hudName = document.getElementById('hudName');
-const hudMn = document.getElementById('hudMn');
-const hudPitch = document.getElementById('hudPitch');
-const hudBanner = document.getElementById('hudBanner');
-const level = document.getElementById('level');
-const count = document.getElementById('count');
-const flash = document.getElementById('flash');
-const hint = document.getElementById('hint');
-
-const state = {
-  selected:0,
-  grid:true,
-  figure:true,
-  labels:true,
-  horizon:true,
-  ratio:'3:4',
-  mirror:false,
-  rot:false,
-  zoom:1,
-  stream:null,
-  useRear:true,
-  timer:0,
-  countNum:0,
-  shotIndex:0
+const SRCS = {
+  0: { site: '通用拍法', title: '攝影常見做法，不是出自上面兩支影片與文章' },
+  1: { yt: 'Ysar4xWHdts', site: '電獺少女', title: '手機拍照不失敗！三種人物構圖必備技巧' },
+  2: { yt: 'vYwPYsIIN_s', site: '電獺少女', title: '手機拍照小技巧【上集】人像怎麼拍' },
+  3: { url: 'https://look.s3.com.tw/look/beauty/9u27tg/page/16794', site: 'Look Pretty 美日誌', title: '直男也能學會的拍照技巧！「九宮格構圖法」3招幫女友拍出漂亮照片' },
+  /* 美食、風景、咖啡廳的出處（2026-11-18 逐篇打開核對過內容；Canon SNAPSHOT 擋自動讀取，沒核到就不引用） */
+  4: { url: 'https://www.tatlerasia.com/dining/food/tips-to-level-up-your-food-shots-noah-zain-zh-hant', site: 'Tatler Asia（2022）', title: '5大技巧讓你拍出大師級美食照：角度正確就對了一大半' },
+  5: { url: 'https://news.tvbs.com.tw/life/63288', site: 'TVBS 新聞（2011）', title: '〈獨家〉好吃這樣拍！45度俯角加料「動手腳」' },
+  6: { url: 'https://www.techbang.com/posts/45228-mobile-phone-photography-39-food-still-life-composition-article-10-tips-to-win-food-photos-and-filming-techniques', site: 'T客邦（2017）', title: '用手機拍好照，10招決勝美食照片的構圖及拍攝技巧' },
+  7: { url: 'https://www.techbang.com/posts/45304-mobile-photography-wins-39-tricks-landscape-architecture-10-tricks-to-teach-you-to-take-the-most-beautiful-landscape-photos', site: 'T客邦（2017）', title: '【手機攝影玩勝39招】風景／建築篇－10招教你拍出最美的風景照片' },
+  8: { url: 'https://www.pro360.com.tw/photo/photography/environmental_photo-landscape_photo', site: 'PRO360 達人網', title: '風景照（頁面下方「關於拍攝風景照的常見問題」）' },
+  9: { url: 'https://www.pro360.com.tw/guide/photoai_drink_photo_tips', site: 'PRO360 達人網（2024）', title: '飲料怎麼拍？拍出吸睛的飲品美食照的4個攝影技巧' },
+  10: { url: 'https://www.bella.tw/articles/design&gadget/25917', site: 'Bella 儂儂（2020）', title: '如何幫女友拍照？3種不同場合的「美照拍攝」技巧' },
+  11: { url: 'https://www.beauty321.com/post/56126', site: 'beauty美人圈（2023）', title: 'ins風咖啡廳拍照姿勢！這樣擺Pose不尷尬、拍出ins生活感' },
+  12: { url: 'https://www.bella.tw/articles/novelty/59468/girl-grip-photo-trend-tips', site: 'Bella 儂儂（2026，轉載香港01）', title: '一手拿滿東西也能拍很美！「Girl Grip」爆紅，4招拍出自然又時髦的照片' },
+  13: { url: 'https://www.digitalcameraworld.com/tech/iphones/fed-up-of-converging-verticals-in-your-iphones-wide-angle-shots-follow-these-tips', site: 'Digital Camera World（2025，英文）', title: 'Fed up of converging verticals in your iPhone\'s wide-angle shots? Follow these tips' },
+  14: { url: 'https://www.hk01.com/article/882677', site: '香港01（2024）', title: 'Y2K風格｜原相機亦能復古、仿底片？手機輕鬆拍出千禧世代CCD感' },
+  15: { url: 'https://www.beauty321.com/post/71326', site: 'beauty美人圈（2026）', title: '「음본나 食中我」教學，Karina、澀琪都在拍的廣角顯瘦技巧' },
 };
 
-function clamp(v,min,max){return Math.min(max,Math.max(min,v));}
-function setText(el, txt){ if (el) el.textContent = txt; }
-function setActiveButton(buttons, value){
-  buttons.forEach(btn => btn.classList.toggle('on', Number(btn.dataset.z) === value));
+/* 人體比例：從頭頂算起佔身高的比例（站姿以 7.5–8 頭身估） */
+const LM = {
+  stand:  { headTop: 0, eye: .062, chin: .126, shoulder: .175, chest: .27, belly: .34, waist: .40, navel: .40, hip: .50, kneeTop: .70, knee: .73, feet: 1 },
+  crouch: { headTop: 0, eye: .088, chin: .18, shoulder: .25, knee: .48, feet: 1 },
+  sit:    { headTop: 0, eye: .08, chin: .164, shoulder: .22, chest: .33, hip: .58, knee: .66, feet: 1 },
+  // Y2K 0.5x 仰拍：不是真的身材，是「超廣角從小腿高度往上拍」在畫面上的樣子——腳近所以大、腿被拉長、頭遠所以小
+  y2k:    { headTop: 0, eye: .044, chin: .088, shoulder: .11, chest: .17, waist: .3, hip: .38, knee: .62, shin: .8, feet: 1 },
+  // Y2K 0.5x 俯拍：手機在頭頂上方往下拍——頭近所以大、身體往下一路縮小
+  y2kHi:  { headTop: 0, eye: .14, chin: .27, shoulder: .33, chest: .45, waist: .62, hip: .75, knee: .88, feet: 1 },
+};
+
+/* 輪廓（身高 100 單位、x 以身體中線為 0；只寫左半邊，右半邊鏡像） */
+const STAND_L = [[-2.5,11.8],[-2.7,14.6],[-7.4,15.7],[-11.5,17.4],[-12.9,21],[-13.3,27.5],[-13.8,35],[-14.3,43],
+  [-14,48.5],[-12.8,52.4],[-10.9,53.6],[-10.2,58],[-9.2,65],[-7.6,72.5],[-7.1,80],[-5.9,91.5],[-6.8,97.4],
+  [-5.8,100],[-1.9,100],[-1.6,95.5],[-2,85],[-1.7,73.5],[-1.3,62],[-0.7,55.5]];
+/* 蹲姿：正面，膝蓋頂到胸口高度而且比肩膀寬、兩腳張開、兩腿之間一路空到很低 */
+const CROUCH_L = [[-3.6,16.5],[-4,20.5],[-10,22.5],[-15,25.5],[-17.5,31],[-20,38],[-22.5,46],[-23,53],[-21.5,60],
+  [-19,69],[-17.5,80],[-17.8,90],[-20,96.5],[-19,100],[-9.5,100],[-8.5,95],[-8,86],[-6.5,80]];
+/* 坐姿：正面、只坐椅子前緣、兩腿併攏往右前方伸（左右不對稱，整條寫出來） */
+const SIT_PTS = [[-3.2,16],[-3.4,19.5],[-9,20.6],[-14,22.6],[-15.4,27.5],[-15.8,35],[-16,43],[-15.4,50],[-13.6,55],
+  [-14,59],[-12.6,64],[-4,68],[6,71],[13.5,81],[19.5,92],[20.5,97.6],[23.5,100],[33,99.6],[34.2,97],[30,93.5],
+  [25,84.5],[20,73],[17.5,65],[15.2,59],[14.2,55],[15.6,50],[16,43],[15.8,35],[15.4,27.5],[14,22.6],[9,20.6],
+  [3.4,19.5],[3.2,16]];
+/* Y2K 0.5x 仰拍的輪廓：頭小、肩窄、腿一路往下變寬變長、腳最大（近大遠小的透視） */
+const Y2K_L = [[-1.8,8.3],[-2,10.2],[-5,11],[-7.6,12.3],[-8.6,15],[-9,20],[-9.4,27],[-9.7,33],[-9.3,37],[-8.3,39.5],
+  [-7.8,41],[-8,50],[-8.6,62],[-9.6,72],[-10.6,82],[-11.6,91],[-14.5,96.5],[-15.5,100],[-4.5,100],[-3.8,95],[-3.2,86],
+  [-2.4,72],[-1.6,58],[-0.8,46]];
+/* Y2K 0.5x 俯拍的輪廓：大頭、肩膀往下收、身體越往下越細（遠小） */
+const Y2K_HI_L = [[-6,27],[-7,29.5],[-14,30.5],[-20.5,33],[-22,39],[-21,47],[-18.5,55],[-15.5,62],[-12.5,64],[-11,66],
+  [-11,74],[-9,82],[-7.6,90],[-7,97],[-6.4,100],[-1.8,100],[-1.4,92],[-1,84]];
+const mirrorPts = (L, mid) => [...L, mid, ...L.slice().reverse().map(([x, y]) => [-x, y])];
+const r2 = n => Math.round(n * 100) / 100;
+function smooth(pts) {               // 開放的 Catmull-Rom → 貝茲
+  const n = pts.length; let d = `M${r2(pts[0][0])} ${r2(pts[0][1])}`;
+  for (let i = 0; i < n - 1; i++) {
+    const p0 = pts[Math.max(i - 1, 0)], p1 = pts[i], p2 = pts[i + 1], p3 = pts[Math.min(i + 2, n - 1)];
+    d += ` C${r2(p1[0] + (p2[0] - p0[0]) / 6)} ${r2(p1[1] + (p2[1] - p0[1]) / 6)} ` +
+         `${r2(p2[0] - (p3[0] - p1[0]) / 6)} ${r2(p2[1] - (p3[1] - p1[1]) / 6)} ${r2(p2[0])} ${r2(p2[1])}`;
+  }
+  return d;
+}
+const FIG = {
+  stand:  { head: { cx: 0, cy: 6.3, rx: 5.1, ry: 6.3 }, d: smooth(mirrorPts(STAND_L, [0, 54])) },
+  crouch: { head: { cx: 0, cy: 9, rx: 7, ry: 9 },        d: smooth(mirrorPts(CROUCH_L, [0, 78])) },
+  sit:    { head: { cx: 0, cy: 8.2, rx: 6.6, ry: 8.2 },  d: smooth(SIT_PTS), asym: true },
+  y2k:    { head: { cx: 0, cy: 4.4, rx: 3.6, ry: 4.4 },  d: smooth(mirrorPts(Y2K_L, [0, 41])) },
+  y2kHi:  { head: { cx: 0, cy: 14, rx: 12.5, ry: 14 },   d: smooth(mirrorPts(Y2K_HI_L, [0, 76])) },
+};
+
+/* ── 模板 ──
+   map：兩個身體部位各對到畫面高度的哪裡（0＝頂、1＝底），輪廓大小與位置由它推出來
+   pitch：鏡頭仰俯角的目標範圍（+ 往上、− 往下），陀螺儀拿它判對錯
+   roll：手機在螢幕平面的轉角目標（− 往左、+ 往右、180 倒拿） */
+const TPLS = [
+{
+  id: 'half', name: '半身照', tag: '2 倍鏡・臉不變形・最好上手', lens: 2, pose: 'stand',
+  map: [['eye', 1/3], ['waist', 1]], cx: .5,
+  mn: '鏡高於眼・眼靠線・頭留半格・底在腰',
+  cam: { at: 'eye', off: -.025, hText: '比對方的眼睛高一點點', tiltText: '鏡頭往下轉一點' },
+  roll: 0,
+  steps: [
+    '用 <b>2 倍鏡頭</b>',
+    '以對方的眼睛為基準，手機<b>略高於眼睛、鏡頭往下轉一點</b>——臉的線條比較好看',
+    '把<b>眼睛放在上面第一條橫線</b>',
+    '頭頂上至少留<b>半格</b>空間，畫面才不壓迫',
+    '畫面底大約切在<b>腰</b>；要調只能往下多帶一點，<b>絕對不要往上切</b>（會瞬間顯胖）',
+  ],
+  avoid: ['人太大又由下往上拍——影片叫它「死亡角度」，像巨人壓下來', '底線往上切到腰以上（顯胖）', '閉眼、晃到——一次多拍幾張'],
+  marks: [
+    { t: 'bracket', y0: 0, y1: 'headTop', text: '頭頂≥半格' },
+    { t: 'hline', y: 'eye', text: '眼睛放這條線', tone: 'key' },
+    { t: 'hline', y: .985, text: '底≈腰，只能往下', tone: 'key' },
+  ],
+  src: [1, 84],
+},
+{
+  id: 'scenic', name: '大片感半身', tag: '人小景大・有透視感', lens: 1, pose: 'stand', mirrorable: true,
+  map: [['headTop', .42], ['waist', 1]], cx: .3,
+  mn: '人放左下（或右下）四格・其他留給景',
+  cam: { at: 'eye', hText: '跟對方的眼睛差不多高', hNote: '文章沒講高度；套影片1膝上照「鏡頭平於眼」', tiltText: '水平' },
+  roll: 0,
+  steps: [
+    '身體放在畫面的<b>左下或右下四格</b>裡（「左右對調」換邊）',
+    '可以<b>側身假裝看風景</b>，也可以正面看鏡頭',
+    '其他格子都<b>留給景色</b>，畫面更有透視感',
+  ],
+  avoid: ['人放正中間又佔滿畫面（景色出不來）'],
+  marks: [
+    { t: 'cells', x0: 0, x1: 2/3, y0: 1/3, y1: 1, text: '人放這四格' },
+    { t: 'look', text: '景色在這邊' },
+  ],
+  src: [3, '技巧 #2'],
+},
+{
+  id: 'knee', name: '膝上照', tag: '人＋風景，人又不會太小', lens: 1, pose: 'stand',
+  map: [['headTop', 1/3], ['kneeTop', 1]], cx: .5,
+  mn: '鏡頭平於眼・頭頂留一格・底靠膝蓋上',
+  cam: { at: 'eye', hText: '跟對方的眼睛一樣高', tiltText: '鏡頭自然微微往下', tiltNote: '口訣「鏡頭平於眼」講的是高度；要同時頭頂留一格、底到膝蓋上緣，鏡頭會微微往下' },
+  roll: 0,
+  steps: [
+    '用 <b>1 倍鏡頭</b>',
+    '手機高度<b>跟對方的眼睛平行</b>',
+    '頭頂至少留<b>一格</b>（頭頂貼著第一條橫線）',
+    '畫面底線在<b>膝蓋上緣</b>',
+    '請對方<b>直視鏡頭</b>，不要往上或往下看——眼睛才有神',
+  ],
+  avoid: ['比例拍差、大腿看起來很粗', '眼睛往上飄或往下看（沒精神）'],
+  marks: [
+    { t: 'bracket', y0: 0, y1: 'headTop', text: '頭頂留一格' },
+    { t: 'hline', y: .985, text: '底線＝膝蓋上緣', tone: 'key' },
+  ],
+  src: [1, 150],
+},
+{
+  id: 'full', name: '全身照', tag: '顯腿長・跟建築／景點合照', lens: 1, pose: 'stand',
+  map: [['headTop', .37], ['feet', .99]], cx: .5,
+  mn: '手機平胸鏡上翹・頭在線下腳貼底',
+  cam: { at: 'chest', hText: '對方的胸口高度', tiltText: '鏡頭往上翹一點' },
+  roll: 0,
+  steps: [
+    '用 <b>1 倍鏡頭</b>',
+    '手機拿在<b>對方胸口的高度</b>——舉太高腿會變短，這是大忌',
+    '手機<b>往上翻一點</b>，才不會頭大身體小',
+    '<b>頭在第一條橫線下面</b>，留一點空間，身體才不會顯大',
+    '<b>腳尖貼著畫面最下緣</b>——腿看起來更長的關鍵',
+  ],
+  avoid: ['站著把手機舉高往下拍（腿短、頭大身體小）', '腳底下留一大塊地板'],
+  marks: [
+    { t: 'hline', y: 'headTop', text: '頭在線下留一點', tone: 'key' },
+    { t: 'hline', y: 'feet', text: '腳尖貼底', tone: 'key' },
+  ],
+  src: [1, 193],
+},
+{
+  id: 'golden', name: '四六分全身', tag: '黃金比例・站姿大長腿', lens: 1, pose: 'stand', mirrorable: true,
+  map: [['headTop', 1/3], ['feet', .99]], cx: .4,
+  mn: '站四六分線・頭頂留一格・腿抵到底',
+  cam: { at: 'chest', hText: '對方的胸口高度', hNote: '文章沒講；套影片1全身照的拿法', tiltText: '大致水平，可以微微往上' },
+  roll: 0,
+  steps: [
+    '人站在<b>四六分線</b>上——比三分線再靠中間一點（「左右對調」換邊）',
+    '<b>頭頂留出一格</b>的空間',
+    '<b>腿抵到畫面底部邊緣</b>，立刻大長腿',
+    '手機拿法照「全身照」：胸口高度、鏡頭往上翹一點（影片1）',
+  ],
+  avoid: ['人站正中間、腳下留一大塊地板'],
+  marks: [
+    { t: 'vline', text: '四六分線' },
+    { t: 'bracket', y0: 0, y1: 'headTop', text: '頭頂留一格' },
+    { t: 'hline', y: 'feet', text: '腿抵到底', tone: 'key' },
+  ],
+  src: [3, '技巧 #3'],
+},
+{
+  id: 'tall', name: '更高挑全身', tag: '手機倒過來拿・腿更長', lens: 1, pose: 'stand', flip: true,
+  map: [['headTop', .18], ['feet', .985]], cx: .5,
+  mn: '手機倒拿・腳放最下面・上面只留一點',
+  cam: { at: 'belly', hText: '胸口拿著，手機轉 180°（鏡頭跑到下面）', tiltText: '保持直立，頂多微微往下' },
+  roll: 180,
+  steps: [
+    '手機<b>轉 180° 倒過來拿</b>，鏡頭跑到下方，視角自然變低',
+    '往後退一點，<b>不要把人塞得頂天立地</b>；人和背景大約 8：2',
+    '<b>腳放在畫面最下面</b>，有拉長比例的效果',
+    '上方只留<b>剛好一點點</b>空間，畫面往上延伸、腿更修長',
+    '坐著的人也能這樣拍',
+  ],
+  avoid: ['人塞得頂天立地', '坐姿時切到膝蓋或其他關節'],
+  marks: [
+    { t: 'bracket', y0: 0, y1: 'headTop', text: '上方留一點點' },
+    { t: 'hline', y: 'feet', text: '腳放最下面', tone: 'key' },
+  ],
+  src: [2, 248],
+},
+{
+  id: 'wide', name: '超廣角人＋景', tag: '0.5x・多帶一點風景', lens: .5, pose: 'stand',
+  map: [['headTop', .4], ['feet', .84]], cx: .5,
+  mn: '胸口高度・往後退・腳別貼底・回家再裁',
+  cam: { at: 'chest', hText: '對方的胸口高度，然後往後退', tiltText: '大致水平', tiltNote: '影片沒講角度；超廣角一歪就變形，建議放平' },
+  roll: 0,
+  steps: [
+    '切到<b>超廣角（0.5x）</b>——網頁叫不出來就用手機內建相機，構圖照這個框',
+    '手機放在<b>對方胸口的位置</b>，然後<b>往後退</b>',
+    '<b>腳不要放得離畫面底太近</b>——超廣角的邊緣會讓腳變形',
+    '多帶一點距離，腳反而會稍微被拉長',
+    '畫面太空就回相簿<b>裁切，一樣把腳收到底</b>',
+  ],
+  avoid: ['腳貼著畫面底（腳會變形）'],
+  marks: [
+    { t: 'zone', y0: .9, y1: 1, text: '腳別放進這一帶', tone: 'warn' },
+    { t: 'crop', text: '之後裁成這樣' },
+  ],
+  src: [2, 279],
+},
+{
+  id: 'sit', name: '坐姿顯腿長', tag: '坐著也拍得出長腿', lens: 1, pose: 'sit', mirrorable: true,
+  map: [['headTop', .22], ['feet', .99]], cx: .42,
+  mn: '只坐 1/3・腿往側前伸・腳尖貼底',
+  cam: { at: 'chest', hText: '大約對方坐著時胸口的高度', hNote: '文章沒講高度；套影片1全身照「手機別舉太高」', tiltText: '大致水平' },
+  roll: 0,
+  steps: [
+    '坐的時候<b>只坐椅子的三分之一</b>',
+    '兩條腿<b>盡量往側前方伸</b>（「左右對調」換方向）',
+    '<b>腳尖貼著畫面底部</b>',
+    '跟所有坐姿一樣：畫面邊緣<b>不要切到膝蓋或其他關節</b>（影片2）',
+  ],
+  avoid: ['整個人坐進椅子、腿縮在椅子下', '畫面底切在小腿或膝蓋'],
+  marks: [
+    { t: 'note', y: 'hip', text: '只坐椅子前 1/3' },
+    { t: 'hline', y: 'feet', text: '腳尖貼底', tone: 'key' },
+  ],
+  src: [3, '技巧 #1'],
+},
+{
+  id: 'dutch', name: '破水平・坐蹲姿', tag: '歪 10°・多一點神祕感', lens: 1, pose: 'crouch', mirrorable: true,
+  map: [['headTop', .47], ['feet', .97]], cx: .5, figRot: 10,
+  mn: '手機轉 10°・別太多・別切關節',
+  cam: { at: 'eye', hText: '蹲低，跟對方的臉差不多高', hNote: '影片沒講高度，照示範畫面抓的', tiltText: '水平，但手機往左（或右）歪 10°' },
+  roll: -10,
+  steps: [
+    '平拍覺得無聊時，把手機<b>往左或往右轉約 10°</b>（「左右對調」可換方向）',
+    '<b>不要轉太多</b>，會天旋地轉——轉過頭就往回喬一點',
+    '坐著或蹲著的人，畫面邊緣<b>不要切到膝蓋或其他關節</b>',
+    '人物<b>不要超過畫面的一半</b>，畫面才不會太壓迫',
+  ],
+  avoid: ['轉太多（天旋地轉）', '切在膝蓋、手肘這些關節上'],
+  marks: [
+    { t: 'bracket', y0: 'headTop', y1: 'feet', text: '人≤畫面一半' },
+  ],
+  src: [2, 343],
+},
+{
+  id: 'mood', name: '氛圍感・三分法', tag: '人像模式・交代去了哪裡', lens: 1, pose: 'stand', mirrorable: true,
+  map: [['headTop', .2], ['feet', .98]], cx: 1/3,
+  mn: '人像模式・人站三分線・手機在肚臍高',
+  cam: { at: 'navel', hText: '對方肚臍的高度', tiltText: '水平' },
+  roll: 0,
+  steps: [
+    '打開<b>人像模式</b>（背景糊掉、人跳出來）',
+    '人站在<b>左或右那條直線上</b>，另一側留給背景——想強調「我到了哪裡」就用這招',
+    '人物和背景維持 <b>8：2</b>，人自然修長',
+    '拍全身時，手機大約在<b>對方肚臍的高度</b>',
+    '女生要讓<b>下顎線出來</b>再按快門',
+    '可以試<b>逆光、自然光、光影交錯</b>的地方',
+  ],
+  avoid: ['人放正中間又塞滿畫面（看不出去了哪裡）', '下巴縮著、下顎線不見'],
+  marks: [
+    { t: 'vline', text: '人站這條線' },
+    { t: 'look', text: '這邊留給背景' },
+  ],
+  src: [2, 363],
+},
+/* Y2K 0.5x 仰拍（2026-11-18 加）：手機倒拿、貼近地面、超廣角往上拍。
+   輪廓是透視變形後的樣子（pose: 'y2k'），所以人物偵測不用（比例全變，比不準），改用角度判「對了沒」。
+   鏡位圖照真人比例畫（sidePose／sideFrac）：手機在小腿高度。 */
+{
+  id: 'y2k', name: 'Y2K 0.5x 仰拍全身', tag: '超廣角・低角度・腿超長', lens: .5, pose: 'y2k', flip: true, noPose: true,
+  sidePose: 'stand',
+  map: [['headTop', .1], ['feet', .99]], cx: .5,
+  mn: '0.5x・手機倒拿貼地往上・臉放中間',
+  cam: { at: 'shin', sideFrac: .85, hText: '手機倒過來拿、放低到對方小腿的高度（蹲下來）', tiltText: '鏡頭往上翹',
+    tiltNote: '角度是這頁照「手機在小腿高度、超廣角、人從頭到腳塞滿」推算的，文章沒給數字' },
+  roll: 180,
+  steps: [
+    '切到 <b>0.5x 超廣角</b>，身後的風景也一起入鏡（香港01）',
+    '手機<b>倒過來拿</b>、放低靠近地面，<b>由下往上</b>拍——低角度會把身體比例拉長（香港01、beauty美人圈）',
+    '臉放在<b>畫面中間</b>：超廣角的邊緣變形最明顯，臉放邊邊會被拉歪（beauty美人圈）',
+    '姿勢走<b>厭世、無表情、不屑感</b>，也可以手往鏡頭伸、坐著或盤腿（香港01）',
+    '光線暗時開<b>閃光燈</b>，更有千禧年 CCD 相機的感覺（香港01；這頁的網頁相機開不了閃光燈，要用內建相機）',
+  ],
+  avoid: ['臉放在畫面邊緣（被超廣角拉歪）', '手機沒放低、平平地拍（腿拉不長，只剩變形）'],
+  marks: [
+    { t: 'vline', x: .5, text: '臉放中間（邊緣會變形）' },
+    { t: 'hline', y: .985, text: '腳放最下面，越近越大', tone: 'key' },
+  ],
+  src: [14, ''], src2: [15, '（手機倒拿、臉放中間）'],
+  srcNote: '輪廓的變形樣子和鏡頭往上的角度是這頁畫的／推算的，文章沒有。',
+},
+/* Y2K 0.5x 俯拍半身：手機舉高往下拍，頭大身小。手機在頭頂上方，畫面裡看不到水平線（noHorizon），
+   角度直接訂 pitch（同樣是這頁估的，文章沒給數字）。 */
+{
+  id: 'y2kHalf', name: 'Y2K 0.5x 俯拍半身', tag: '手機舉高・頭大身小', lens: .5, pose: 'y2kHi', noPose: true, noHorizon: true,
+  sidePose: 'stand',
+  map: [['headTop', .08], ['waist', 1]], cx: .5,
+  mn: '0.5x・手機舉高往下・臉放中間・身體前傾',
+  pitch: [-70, -35],
+  cam: { at: 'headTop', sideFrac: -.16, tilt: -50, hText: '手機舉到對方頭頂上方、靠近一點（自拍就把手伸高）', tiltText: '鏡頭往下約 50°',
+    tiltNote: '角度範圍是這頁估的，文章沒給數字' },
+  roll: 0,
+  steps: [
+    '切到 <b>0.5x 超廣角</b>（香港01）',
+    '手機<b>舉高、從上往下拍</b>，拍出頭大身小的 Y2K 感（香港01）',
+    '正面拍時<b>身體往前傾</b>，讓五官盡量填滿鏡頭；怕臉太大就讓頭<b>微微後仰或側傾</b>（香港01）',
+    '臉放在<b>畫面中間</b>：超廣角的邊緣變形最明顯（beauty美人圈）',
+    '表情走<b>厭世、無表情</b>，手往鏡頭伸更有張力（香港01）',
+  ],
+  avoid: ['臉放在畫面邊緣（被超廣角拉歪）', '手機拿太遠（變形不夠，像普通照片）'],
+  marks: [
+    { t: 'vline', x: .5, text: '臉放中間（邊緣會變形）' },
+    { t: 'label', x: .5, y: .82, text: '頭大身小就是要這個效果' },
+  ],
+  src: [14, ''], src2: [15, '（臉放中間）'],
+  srcNote: '輪廓的變形樣子、鏡頭往下的角度、「手機拿太遠」那條是這頁畫的／估的，文章沒有。',
+},
+
+/* ── 美食、風景（2026-11-18 加）──
+   不是人，沒有身體部位可對，改用 shapes 畫主體（座標＝畫面寬高的比例；圓的半徑、橢圓的 rx/ry 用寬當單位）。
+   美食的角度直接訂（俯拍、45°、平拍是三種固定拍法）；風景訂水平線高度 hz，角度由它反推，跟人像同一套。
+   出處：2026-11-18 另外找的文章（SRCS 4–13），每篇都打開核對過說了什麼；文章跟原本寫的不一樣就照文章改
+   （45° 改成 30–45°、手拿咖啡的背景改成素色、店面改成往後退而不是切 0.5x）。
+   文章沒講、是這頁自己加的（多半是「放哪條線」），寫在 srcNote，不讓整張卡看起來都有出處。 */
+{
+  id: 'flat', cat: 'food', kind: 'obj', name: '俯拍・正上方', tag: '擺盤、一桌菜、咖啡拉花', lens: 1,
+  mn: '手機平行桌面・主角放中間・配角放對角',
+  pitch: [-91, -83], roll: null,
+  cam: { tilt: -90, hText: '食物正上方，整盤剛好進畫面的高度', hNote: '站起來拍比較容易做到', tiltText: '鏡頭正對下方，手機跟桌面平行' },
+  shapes: [
+    { t: 'circle', cx: .5, cy: .52, r: .3 },
+    { t: 'circle', cx: .5, cy: .52, r: .19 },
+    { t: 'circle', cx: .82, cy: .16, r: .1 },
+    { t: 'rrect', x: .09, y: .74, w: .05, h: .22, r: .025 },
+  ],
+  marks: [
+    { t: 'label', x: .5, y: .52, text: '主角放中間或交叉點' },
+    { t: 'label', x: .62, y: .07, text: '飲料、餐具放對角' },
+  ],
+  steps: [
+    '適合<b>擺盤好看的菜、好幾道菜並排</b>——攝影師 Noah Zain 拍擺盤和多道菜就用正上方（Tatler）',
+    '<b>站起來</b>，手機舉到食物<b>正上方</b>，跟桌面平行——右上角出現「正對下方 ✓」就對了',
+    '主菜放<b>正中間或交叉點</b>，飲料、餐具放在<b>對角</b>',
+    '坐靠窗的位子，把食物移到<b>窗邊用自然光</b>（T客邦）',
+  ],
+  avoid: [
+    '有高度、有層次的食物（漢堡）別從正上方拍——層次和高度會不見（Tatler）',
+    '盤面普通時也別硬用正上方：TVBS 訪問的美食攝影師說 90° 俯角「看起來會很平」，改用 45° 斜拍',
+    '手機沒放平（圓盤變橢圓、桌邊歪斜）',
+  ],
+  src: [4, '（三種角度）'], src2: [5, ''],
+  srcNote: '主菜放交叉點、配角放對角是這頁的建議，兩篇文章沒講。',
+},
+{
+  id: 'food45', cat: 'food', kind: 'obj', name: '45° 斜拍', tag: '30–45° 俯角・最有立體感', lens: 1,
+  mn: '手機往下 30–45°・盤子放下面那條線・上面留給桌面',
+  pitch: [-47, -28], roll: 0,
+  cam: { tilt: -38, hText: '坐在位子上，大約眼睛的高度', tiltText: '鏡頭往下 30–45°',
+    tiltNote: 'TVBS 訪問的美食攝影師：30 到 45 度的俯角拍出來最好吃' },
+  shapes: [
+    { t: 'ellipse', cx: .5, cy: 2 / 3, rx: .42, ry: .16 },
+    { t: 'path', close: true, pts: [[.27, .67], [.31, .58], [.4, .53], [.5, .515], [.6, .53], [.69, .58], [.73, .67], [.6, .71], [.4, .71]] },
+  ],
+  marks: [
+    { t: 'hline', y: 2 / 3, text: '盤子中心放這條線', tone: 'key' },
+    { t: 'label', x: .5, y: .22, text: '上面留給桌面延伸、背景' },
+  ],
+  steps: [
+    '坐在位子上，手機<b>往下 30–45°</b>（TVBS 訪問的美食攝影師說這個角度最好吃）',
+    '<b>靠近</b>拍，約 50 公分內前景清楚、後面自然模糊（T客邦）',
+    '盤子中心放在<b>下面那條橫線</b>',
+    '上面留給<b>桌面延伸和背景</b>，可以用桌上其他東西妝點後景（T客邦）',
+    '靠窗的話，把食物移到<b>窗邊用自然光</b>（T客邦）',
+  ],
+  avoid: ['拍成正上方 90°——攝影師說看起來很平、沒有立體感（TVBS）', '背景雜亂（紙巾、帳單、別人的手）'],
+  src: [5, ''], src2: [6, '（第 1、2 招）'],
+  srcNote: '盤子放下面那條線是這頁的建議，文章沒講。',
+},
+{
+  id: 'foodeye', cat: 'food', kind: 'obj', name: '平拍・跟食物同高', tag: '漢堡、飲料、蛋糕切面', lens: 1, mirrorable: true,
+  mn: '鏡頭跟食物同高・拍出層次・主角站三分線',
+  pitch: [-6, 6], roll: 0,
+  cam: { tilt: 0, hText: '跟食物一樣高（手肘可以靠在桌上穩住）', tiltText: '水平' },
+  shapes: [
+    { t: 'rrect', x: 1 / 3 - .15, y: 2 / 3 - .36, w: .3, h: .36, r: .05 },
+    { t: 'rrect', x: 1 / 3 - .15, y: 2 / 3 - .25, w: .3, h: .07, r: .02 },
+    { t: 'circle', cx: .76, cy: 2 / 3 - .07, r: .07 },
+  ],
+  marks: [
+    { t: 'hline', y: 2 / 3, text: '桌面邊緣放這條線', tone: 'key' },
+    { t: 'vline', x: 1 / 3, text: '主角站這條線' },
+  ],
+  steps: [
+    '適合<b>漢堡、分層飲料、蛋糕切面</b>這種要看高度和層次的——Tatler 的攝影師拍漢堡用的就是平拍（90°）',
+    '手機<b>降到跟食物一樣高</b>，鏡頭<b>水平</b>看過去；從側面拍最能看出飲料的層次（PRO360）',
+    '主角站在<b>左或右那條直線</b>上（「左右對調」換邊）——飲料放三分之一處畫面比較平衡（PRO360）',
+    '桌面邊緣放在<b>下面那條橫線</b>，而且要<b>平</b>',
+  ],
+  avoid: ['從正上方拍高的食物——層次和高度都不見（Tatler）', '桌緣歪一邊'],
+  src: [4, '（三種角度）'], src2: [9, '（角度、三分法）'],
+  srcNote: '桌面邊緣放下面那條線是這頁的建議，文章沒講。',
+},
+{
+  id: 'sky', cat: 'scene', kind: 'obj', name: '天空為主', tag: '雲、晚霞、藍天好看時', lens: 1,
+  hz: 2 / 3, roll: 0,
+  mn: '水平線放下面那條線・天空佔三分之二',
+  cam: { hText: '站著，眼睛的高度', tiltText: '鏡頭微微往上' },
+  hzText: '放在<b>下面那條橫線</b>（天空佔 2/3）',
+  shapes: [
+    { t: 'path', pts: [[0, .667], [.1, .62], [.2, .645], [.33, .575], [.46, .64], [.58, .6], [.7, .65], [.84, .605], [1, .667]] },
+  ],
+  marks: [
+    { t: 'label', x: .5, y: .3, text: '天空 2/3' },
+    { t: 'label', x: .5, y: .84, text: '地面 1/3' },
+  ],
+  steps: [
+    '<b>藍天白雲</b>、天空比地面好看時用這個（T客邦）',
+    '把地平線／海平線放在<b>下面那條橫線</b>，天空佔 2/3（PRO360：地平線放上或下三分之一）',
+    '天空真的很漂亮，可以讓天空佔到<b>八成以上</b>，地面只當陪襯（T客邦）',
+    '水平線一定要<b>平</b>：藍色實線疊上虛線就變綠（T客邦也建議開九宮格輔助、拍完再轉正）',
+  ],
+  avoid: ['天空拍成一片白——用手機內建相機時對著天空點一下測光，地面太暗再調曝光（T客邦第 2 招；這頁的網頁相機做不到點測光）', '水平線歪'],
+  src: [7, '（第 1、2 招）'], src2: [8, '（地平線放上或下三分之一）'],
+},
+{
+  id: 'ground', cat: 'scene', kind: 'obj', name: '地面為主', tag: '花海、草原、倒影、街景', lens: 1,
+  hz: 1 / 3, roll: 0,
+  mn: '水平線放上面那條線・地面佔三分之二',
+  cam: { hText: '站著，眼睛的高度', tiltText: '鏡頭微微往下' },
+  hzText: '放在<b>上面那條橫線</b>（地面佔 2/3）',
+  shapes: [
+    { t: 'path', pts: [[0, .333], [.12, .29], [.25, .315], [.4, .26], [.55, .31], [.7, .28], [.85, .315], [1, .333]] },
+  ],
+  marks: [
+    { t: 'label', x: .5, y: .16, text: '天空 1/3' },
+    { t: 'label', x: .5, y: .68, text: '地面 2/3' },
+  ],
+  steps: [
+    '地面比天空好看時用：<b>山景、花海、草原、街景</b>',
+    '把地平線放在<b>上面那條橫線</b>：天空 1/3、地面 2/3——PRO360 拍山景就建議這個比例',
+    '水平線一定要<b>平</b>',
+  ],
+  avoid: ['水平線歪'],
+  src: [8, '（山景：1/3 天空、2/3 地面）'],
+},
+{
+  id: 'fore', cat: 'scene', kind: 'obj', name: '前景＋遠景', tag: '加一個前景，畫面有層次', lens: 1, mirrorable: true,
+  hz: 1 / 3, roll: 0,
+  mn: '蹲低靠近前景・前景放左下・水平線放上面',
+  cam: { low: true, hText: '蹲低，靠近前景（石頭、花、欄杆）', tiltText: '鏡頭微微往下' },
+  hzText: '放在<b>上面那條橫線</b>',
+  shapes: [
+    { t: 'path', close: true, pts: [[-.02, 1.01], [-.02, .74], [.12, .66], [.27, .64], [.4, .7], [.5, .84], [.56, 1.01]] },
+    { t: 'path', pts: [[.45, .333], [.58, .29], [.7, .31], [.84, .27], [1, .333]] },
+  ],
+  marks: [
+    { t: 'label', x: .24, y: .83, text: '前景' },
+    { t: 'label', x: .72, y: .2, text: '遠景' },
+  ],
+  steps: [
+    '在畫面前方放一個<b>前景</b>：樹枝、花、岩石都可以（PRO360）',
+    '<b>把手機放低</b>，讓前景佔住畫面下方，視線會被帶往遠方（PRO360）',
+    '前景放<b>左下或右下</b>一角（「左右對調」換邊），遠景的水平線放<b>上面那條橫線</b>',
+  ],
+  avoid: ['前景喧賓奪主——要跟中景、遠景協調（PRO360）'],
+  src: [8, '（前景、角度）'],
+  srcNote: '前景放左下或右下一角是這頁的建議，文章只說放在畫面下方。',
+},
+{
+  id: 'lead', cat: 'scene', kind: 'obj', name: '引導線', tag: '路、河、鐵軌、欄杆帶視線', lens: 1, mirrorable: true,
+  hz: 1 / 3, roll: 0,
+  mn: '線從下面角落進來・消失點放交叉點',
+  cam: { hText: '站著或蹲低都可以', tiltText: '鏡頭微微往下' },
+  hzText: '放在<b>上面那條橫線</b>，線最後消失的點就在這條線上',
+  shapes: [
+    { t: 'lines', segs: [[[.06, 1], [2 / 3, 1 / 3]], [[.98, 1], [2 / 3, 1 / 3]], [[.52, 1], [2 / 3, 1 / 3]]] },
+  ],
+  marks: [
+    { t: 'label', x: 2 / 3, y: 1 / 3 - .07, text: '消失點放交叉點' },
+    { t: 'label', x: .5, y: .9, text: '路、河從角落進來' },
+  ],
+  steps: [
+    '找一條<b>會延伸的線</b>：山脊、小徑、道路（PRO360）',
+    '用道路的<b>消失點</b>把視線帶到畫面深處（PRO360）',
+    '讓線<b>從畫面下面的角落</b>進來，消失點放在<b>上面的交叉點</b>（「左右對調」換邊）',
+    '水平線放<b>上面那條橫線</b>',
+  ],
+  avoid: ['線被切斷，看不出往哪裡延伸'],
+  src: [8, '（引導線、消失點）'],
+  srcNote: '線從角落進來、消失點放交叉點是這頁的建議，文章只說用線條和消失點引導視線。',
+},
+
+/* ── 咖啡廳（2026-11-18 加）：桌上（拉花、甜點）、手上（外帶杯）、人（窗邊座位）、空間（店面、店內）六種最常拍的。
+   出處同上一段的規矩。diag 指定鏡位圖畫桌子（table）還是場景（scene＋遠處是什麼）。 */
+{
+  id: 'latte', cat: 'cafe', kind: 'obj', name: '拉花俯拍', tag: '從上面拍整體造型', lens: 1,
+  mn: '正上方・杯子放交叉點・窗邊柔光',
+  pitch: [-91, -83], roll: null, diag: { kind: 'table' },
+  cam: { tilt: -90, hText: '杯子正上方，站起來拍', tiltText: '鏡頭正對下方，手機跟桌面平行' },
+  shapes: [
+    { t: 'circle', cx: .64, cy: .6, r: .25 },
+    { t: 'circle', cx: .64, cy: .6, r: .15 },
+    { t: 'circle', cx: .82, cy: .67, r: .035 },
+    { t: 'circle', cx: .22, cy: .22, r: .15 },
+    { t: 'circle', cx: .22, cy: .22, r: .08 },
+    { t: 'rrect', x: .03, y: .74, w: .3, h: .23, r: .015 },
+  ],
+  marks: [
+    { t: 'label', x: .64, y: .6, text: '杯子放交叉點附近' },
+    { t: 'label', x: .3, y: .05, text: '甜點、書放對角' },
+  ],
+  steps: [
+    '站起來，手機在杯子<b>正上方</b>、跟桌面平行——從上面拍能展示飲料的整體造型（PRO360）',
+    '杯子放在<b>畫面三分之一處</b>（交叉點附近），畫面比較平衡（PRO360）',
+    '<b>靠窗</b>用柔和的自然光；光太強就用白色窗簾減弱，早上或傍晚的光最柔（PRO360）',
+    '道具（甜點、湯匙、書）<b>擺整齊</b>，不要太亂（PRO360）',
+  ],
+  avoid: ['道具亂擺、太多', '正午的強光直射'],
+  src: [9, '（光線、角度、構圖、道具）'],
+  srcNote: '甜點、書放對角是這頁的建議，文章只說道具要擺整齊。',
+},
+{
+  id: 'cafe45', cat: 'cafe', kind: 'obj', name: '咖啡＋甜點斜拍', tag: '一前一後有層次', lens: 1,
+  mn: '甜點在前・咖啡在後・手機往下 30–45°',
+  pitch: [-47, -28], roll: 0, diag: { kind: 'table' },
+  cam: { tilt: -38, hText: '坐在位子上，大約眼睛的高度', tiltText: '鏡頭往下 30–45°',
+    tiltNote: '跟美食「45° 斜拍」同一個依據：TVBS 訪問的美食攝影師說 30–45° 俯角最好看' },
+  shapes: [
+    { t: 'ellipse', cx: .36, cy: .7, rx: .29, ry: .1 },
+    { t: 'path', close: true, pts: [[.22, .7], [.25, .61], [.36, .565], [.47, .61], [.5, .7], [.36, .73]] },
+    { t: 'ellipse', cx: .71, cy: .52, rx: .17, ry: .05 },
+    { t: 'rrect', x: .61, y: .35, w: .2, h: .165, r: .03 },
+  ],
+  marks: [
+    { t: 'hline', y: .7, text: '甜點放前面這條線', tone: 'key' },
+    { t: 'label', x: .71, y: .27, text: '咖啡放斜後方' },
+  ],
+  steps: [
+    '甜點放<b>前面</b>當主角、咖啡放<b>後面</b>：用桌上其他東西妝點後景，襯托主角的立體感（T客邦）',
+    '<b>靠近</b>拍，約 50 公分內前景清楚、後面自然模糊（T客邦）',
+    '手機<b>往下 30–45°</b>（TVBS）',
+    '甜點放在<b>下面那條橫線</b>，咖啡在<b>右上交叉點</b>附近',
+    '靠窗的話，把東西移到<b>窗邊用自然光</b>（T客邦）',
+  ],
+  avoid: ['兩樣東西並排一直線（呆板）', '背景拍到別桌客人'],
+  src: [6, '（第 1、2 招）'], src2: [5, ''],
+  srcNote: '甜點、咖啡各放哪條線，以及「不要這樣」的兩條，是這頁的建議，文章沒講。',
+},
+{
+  id: 'cupHand', cat: 'cafe', kind: 'obj', name: '手拿咖啡', tag: '外帶杯・背景要乾淨', lens: 1, mirrorable: true,
+  mn: '杯子放三分線・手要乾淨・背景素色',
+  pitch: [-8, 8], roll: 0, diag: { kind: 'scene', far: 'wall', near: 'cup' },
+  cam: { tilt: 0, hText: '手臂伸出去，杯子在眼睛下方一點', tiltText: '水平' },
+  shapes: [
+    { t: 'poly', pts: [[.55, .34], [.81, .34], [.78, .64], [.58, .64]] },
+    { t: 'rrect', x: .53, y: .3, w: .3, h: .05, r: .02 },
+    { t: 'poly', pts: [[.565, .45], [.795, .45], [.788, .53], [.572, .53]] },
+    { t: 'path', close: true, pts: [[.5, 1.01], [.52, .78], [.56, .66], [.64, .62], [.74, .63], [.8, .68], [.84, .8], [.8, 1.01]] },
+  ],
+  marks: [
+    { t: 'label', x: .68, y: .2, text: '杯子放右邊那條線' },
+    { t: 'label', x: .26, y: .36, text: '背景：素色牆面最好' },
+  ],
+  steps: [
+    '手上的杯子是主角，背景<b>越簡潔越好</b>——純色牆面最理想（Bella／香港01）',
+    '手要<b>乾淨整齊</b>，指甲是整體質感的關鍵（Bella／香港01）',
+    '杯子和衣服、背景挑<b>相近色系</b>，畫面比較和諧（Bella／香港01）',
+    '杯子放在<b>右（或左）邊那條直線</b>上（「左右對調」換邊）',
+  ],
+  avoid: ['背景是雜亂的桌面、街景或裝飾太多的地方（Bella／香港01）'],
+  src: [12, '（技巧 1–3）'],
+  srcNote: '杯子放三分線是這頁的建議，文章沒講位置。',
+},
+{
+  id: 'window', cat: 'cafe', name: '窗邊座位人像', tag: '靠窗補光・眼睛看遠處', lens: 1, pose: 'sit', mirrorable: true,
+  map: [['eye', 1 / 3], ['hip', .86]], cx: 2 / 3,
+  mn: '坐靠窗・人在三分線・眼睛看遠處',
+  cam: { at: 'eye', hText: '你也坐下來，跟對方的眼睛差不多高', tiltText: '鏡頭微微往下',
+    tiltNote: '手機跟眼睛同高、眼睛又要放在上面那條線，鏡頭自然會往下一點（跟膝上照同一個道理）' },
+  roll: 0,
+  shapes: [
+    { t: 'rrect', x: .27, y: .7, w: .1, h: .09, r: .015 },
+    { t: 'ellipse', cx: .32, cy: .795, rx: .09, ry: .02 },
+  ],
+  marks: [
+    { t: 'hline', y: .8, text: '桌面邊緣', tone: 'info' },
+    { t: 'look', text: '窗戶在這邊' },
+  ],
+  steps: [
+    '咖啡廳室內光線常不夠，坐<b>靠窗</b>的位子，用透進來的陽光補光（Bella）',
+    '對焦在<b>人</b>身上，咖啡、甜點只是配角（Bella）',
+    '請對方<b>眼睛自然看向遠處</b>、不用看鏡頭；也可以把杯子舉到嘴邊（beauty美人圈）',
+    '店裡的<b>裝潢、桌椅</b>也一起入鏡，照片更有質感（Bella）',
+    '人坐在<b>右（或左）邊那條直線</b>上，眼睛放在<b>上面那條橫線</b>附近（「左右對調」換邊）',
+  ],
+  avoid: ['逆光——窗戶在對方正後面時臉會黑（Bella 提醒要注意逆光）'],
+  src: [10, '（咖啡廳）'], src2: [11, '（姿勢 1、3、6）'],
+  srcNote: '人坐三分線、眼睛放上面那條線、你也坐下來跟眼睛同高，是這頁的建議（套人像模板的拍法），文章沒講。',
+},
+{
+  id: 'storefront', cat: 'cafe', kind: 'obj', name: '店面門口', tag: '招牌完整・直線不歪', lens: 1,
+  hz: .5, roll: 0, diag: { kind: 'scene', far: 'building' },
+  mn: '往後退・手機拿直不仰・門放中間',
+  cam: { hText: '往後退到整個店面進得來，胸口高度', tiltText: '保持水平，不要往上仰' },
+  hzText: '手機<b>拿直、不俯不仰</b>，水平線會落在正中間——建築的直線才不會往上收斜',
+  shapes: [
+    { t: 'rrect', x: .06, y: .18, w: .88, h: .64, r: .01 },
+    { t: 'rrect', x: .22, y: .23, w: .56, h: .09, r: .015 },
+    { t: 'rrect', x: .4, y: .5, w: .2, h: .32, r: .01 },
+    { t: 'rrect', x: .12, y: .45, w: .2, h: .2, r: .01 },
+    { t: 'rrect', x: .68, y: .45, w: .2, h: .2, r: .01 },
+  ],
+  marks: [
+    { t: 'label', x: .5, y: .275, text: '招牌完整、拍清楚' },
+    { t: 'label', x: .5, y: .9, text: '門放中間，左右對稱' },
+  ],
+  steps: [
+    '<b>往後退</b>（或換 1x、2x），退到不用把手機往上仰就拍得到整個店面（Digital Camera World）',
+    '手機<b>拿直、保持水平</b>——一往上仰，建築就上窄下寬；前面有長椅、咖啡桌之類的前景，就更有理由把手機放平（Digital Camera World）',
+    '門放在<b>正中間</b>，維持中軸直線、左右對稱；開九宮格或水平儀輔助（T客邦第 6 招）',
+    '<b>招牌</b>要完整、拍清楚',
+  ],
+  avoid: ['靠太近往上仰拍（上窄下寬）', '靠修圖軟體把歪掉的直線拉正——建築頂端會變糊，拍的時候拍對比較好（Digital Camera World）'],
+  src: [13, '（英文）'], src2: [7, '（第 6 招：建築中央構圖）'],
+  srcNote: '招牌要完整是這頁的建議，文章沒講。',
+},
+{
+  id: 'interior', cat: 'cafe', kind: 'obj', name: '店內空間', tag: '0.5x・對稱・不歪', lens: .5,
+  hz: .5, roll: 0, diag: { kind: 'scene', far: 'room' },
+  mn: '0.5x・站正中間・胸口高度拿直',
+  cam: { hText: '站在店的正中間，胸口高度', tiltText: '保持水平' },
+  hzText: '手機<b>拿直、高度約胸口</b>，水平線落在正中間——超廣角一歪，邊緣的直線就變形',
+  shapes: [
+    { t: 'rrect', x: .3, y: .33, w: .4, h: .3, r: .005 },
+    { t: 'lines', segs: [[[0, 0], [.3, .33]], [[1, 0], [.7, .33]], [[0, 1], [.3, .63]], [[1, 1], [.7, .63]]] },
+  ],
+  marks: [
+    { t: 'label', x: .5, y: .82, text: '站在正中間，左右對稱' },
+  ],
+  steps: [
+    '站在<b>正中間</b>（走道或門口往內），用對稱構圖，<b>透視點放在畫面中央</b>——單調的走廊也拍得出規律感（T客邦第 10 招）',
+    '維持<b>中軸直線、左右對稱</b>，開九宮格或水平儀輔助（T客邦第 6 招）',
+    '手機<b>保持水平</b>，不要往上或往下仰——廣角一仰，直線就收斜（Digital Camera World）',
+    '切到<b>超廣角 0.5x</b>，把店內空間帶進來',
+    '挑<b>人少</b>的時段，或先問店家可不可以拍',
+  ],
+  avoid: ['手機往上或往下歪（廣角邊緣的直線會收斜）', '拍到其他客人的臉'],
+  src: [7, '（第 6、10 招）'], src2: [13, '（英文）'],
+  srcNote: '用 0.5x、挑人少的時段、別拍到客人的臉是這頁的建議，文章沒講。',
+},
+];
+for (const t of TPLS) { t.kind = t.kind || 'person'; t.cat = t.cat || 'person'; }
+const CATS = [['person', '人像'], ['food', '美食'], ['scene', '風景'], ['cafe', '咖啡廳']];
+
+/* ── 狀態 ── */
+const st = { tpl: 'half', grid: true, fig: true, labels: true, horizon: true, ratio: '3:4', mirror: false, manualRot: false, timer: false, zoom: 1,
+  pose: true, auto: false, lastByCat: {} };
+try { Object.assign(st, JSON.parse(localStorage.getItem('portraitCam') || '{}')); } catch (e) {}
+// 九宮格、人物輪廓、背景水平線是這個相機的本體：上次關掉的不帶到下次，每次打開都在
+Object.assign(st, { grid: true, fig: true, horizon: true });
+const idxOf = id => Math.max(0, TPLS.findIndex(t => t.id === id));
+if (!TPLS.some(t => t.id === st.tpl)) st.tpl = 'half';
+const cur = () => TPLS[idxOf(st.tpl)];
+const save = () => { try { localStorage.setItem('portraitCam', JSON.stringify(st)); } catch (e) {} };
+
+/* 裝置判斷：手機版版面、iPhone（存照片走分享選單）、App 內建瀏覽器（LINE／FB／IG 多半開不了相機） */
+const MQ = window.matchMedia('(max-width:959px)');
+const UA = navigator.userAgent || '';
+const IOS = /iPhone|iPad|iPod/.test(UA) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const IN_APP = /\bLine\/|FBAN|FBAV|FB_IAB|Instagram|MicroMessenger|KAKAOTALK/i.test(UA);
+const CRIOS = IOS && /CriOS/.test(UA);                 // iPhone 版 Chrome：長按「儲存圖片」存不了頁面裡的照片
+const IN_APP_TXT = '這是 LINE／FB／IG 裡面開的網頁，不能用相機：點右上角「⋯」→「用瀏覽器開啟」（Safari 或 Chrome）';
+
+/* ── SVG 小工具 ── */
+function el(tag, attrs, parent) {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) if (attrs[k] != null) e.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+const toneColor = t => t === 'warn' ? WARN : t === 'info' ? INFO : t === 'hzn' ? HZN : ACC;
+function textW(s, fs) { let w = 0; for (const ch of s) w += /[\x00-\xff]/.test(ch) ? fs * .56 : fs; return w; }
+function pill(svg, W, x, y, text, tone, anchor) {
+  const fs = 11, w = textW(text, fs) + 12, h = fs + 8;
+  let rx = anchor === 'end' ? x - w : anchor === 'middle' ? x - w / 2 : x;
+  rx = Math.max(3, Math.min(W - w - 3, rx));
+  el('rect', { x: r2(rx), y: r2(y - h / 2), width: r2(w), height: h, rx: h / 2, fill: 'rgba(0,0,0,.66)', stroke: toneColor(tone), 'stroke-width': 1 }, svg);
+  const t = el('text', { x: r2(rx + w / 2), y: r2(y + fs * .36), 'text-anchor': 'middle', 'font-size': fs, 'font-weight': 600, fill: '#fff' }, svg);
+  t.textContent = text;
 }
 
-function drawGuides(){
-  const rect = vp.getBoundingClientRect();
-  const W = Math.max(1, rect.width);
-  const H = Math.max(1, rect.height);
-  const t = templates[state.selected].base;
+function geom(tpl, W, H, mirror) {
+  if (tpl.kind !== 'person') {                     // 美食、風景：沒有身體，只給標示要用的欄位
+    const cx = tpl.cx == null ? .5 : tpl.cx;
+    return { W, H, s: 0, top: 0, k: 0, lm: {}, cx: (mirror ? 1 - cx : cx) * W, rot: 0 };
+  }
+  const lm = LM[tpl.pose];
+  const [[a, ya], [b, yb]] = tpl.map;
+  const s = (yb - ya) * H / (lm[b] - lm[a]);       // 輪廓在畫面上的全身高度（px）
+  const top = ya * H - lm[a] * s;
+  return { W, H, s, top, k: s / 100, lm, cx: (mirror ? 1 - tpl.cx : tpl.cx) * W, rot: (tpl.figRot || 0) * (mirror ? -1 : 1) };
+}
+const yOf = (v, g, H) => typeof v === 'number' ? v * H : g.top + g.lm[v] * g.s;
 
-  overlay.setAttribute('viewBox', `0 0 ${W} ${H}`);
-  overlay.innerHTML = '';
-  hzn.setAttribute('viewBox', `0 0 ${W} ${H}`);
-  hzn.innerHTML = '';
+/* 背景水平線：地面平的話，遠處的地平線一定穿過對方身上「跟手機一樣高」的那一點（任何俯仰角都成立）。
+   所以模板的目標水平線＝輪廓上 cam.at 那一點、角度跟著輪廓轉（破水平時一起歪）。 */
+function horizonPoint(tpl, g) {
+  // 風景：模板直接訂水平線高度；美食：看不到水平線（往下拍），回 null
+  if (tpl.kind !== 'person') return tpl.hz == null ? null : { px: g.W / 2, py: tpl.hz * g.H, rot: 0 };
+  if (tpl.noHorizon) return null;                                // 手機在頭頂上方往下拍：水平線在畫面外
+  const f = g.lm[tpl.cam.at] + (tpl.cam.off || 0);
+  const a = g.rot * D2R, y0 = f * 100 - 50;              // 輪廓內的點 (0, f·100) 繞 (0, 50) 轉
+  return { px: g.cx - g.k * y0 * Math.sin(a), py: g.top + g.k * (50 + y0 * Math.cos(a)), rot: g.rot };
+}
+const hzYAtCenter = (hp, W) => hp.py + Math.tan(hp.rot * D2R) * (W / 2 - hp.px);
+const partName = cam => cam.off < 0 ? '眼睛上方一點' :({ eye: '眼睛', chest: '胸口', navel: '肚臍', belly: '胸口下方', shin: '小腿', headTop: '頭頂上方' })[cam.at];
+const hasHorizon = t => (t.kind === 'person' && !t.noHorizon) || t.hz != null;
+const hzLabel = t => t.kind === 'person' ? `背景水平線＝${partName(t.cam)}${t.cam.off < 0 ? '' : '高'}` : '水平線放這條';
 
-  if (state.grid){
-    const lines = [W/3, W*2/3];
-    const hlines = [H/3, H*2/3];
-    for (const x of lines){
-      overlay.insertAdjacentHTML('beforeend', `<path d="M ${x} 0 L ${x} ${H}" stroke="rgba(255,255,255,.7)" stroke-width="1" stroke-dasharray="6 8"/>`);
+/* 目標仰俯角不手填：由「水平線在畫面多高」反推（水平線在畫面中間以下＝鏡頭往上）。
+   這樣輪廓、背景水平線、陀螺儀判定、鏡位圖四者一定一致。美食的角度是固定拍法，模板直接訂 pitch。 */
+for (const t of TPLS) {
+  if (t.pitch) continue;
+  const W = 300, H = 400, g = geom(t, W, H, false);
+  const yc = hzYAtCenter(horizonPoint(t, g), W) / H;
+  const c = Math.atan((yc - .5) * 2 * TAN_HALF_1X / t.lens) * R2D;
+  t.cam.tilt = Math.round(c);
+  t.pitch = [Math.round(c - 5), Math.round(c + 5)];
+}
+
+function drawOverlay(svg, tpl, o) {
+  const W = 300, H = o.ratio === '9:16' ? 300 * 16 / 9 : 400;
+  svg.setAttribute('viewBox', `0 0 ${W} ${r2(H)}`);
+  svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+  svg.textContent = '';
+  const g = geom(tpl, W, H, o.mirror);
+  if (o.bg) el('rect', { x: 0, y: 0, width: W, height: H, fill: o.bg }, svg);
+
+  // 底層：危險區、該放人的格子
+  if (o.labels) for (const m of tpl.marks) {
+    if (m.t === 'zone') {
+      const y0 = yOf(m.y0, g, H), y1 = yOf(m.y1, g, H);
+      el('rect', { x: 0, y: r2(y0), width: W, height: r2(y1 - y0), fill: 'rgba(255,107,90,.22)' }, svg);
+      el('line', { x1: 0, y1: r2(y0), x2: W, y2: r2(y0), stroke: WARN, 'stroke-width': 1.4, 'stroke-dasharray': '6 4' }, svg);
+    } else if (m.t === 'cells') {
+      const x0 = (o.mirror ? 1 - m.x1 : m.x0) * W, x1 = (o.mirror ? 1 - m.x0 : m.x1) * W;
+      el('rect', { x: r2(x0 + 1), y: r2(m.y0 * H + 1), width: r2(x1 - x0 - 2), height: r2((m.y1 - m.y0) * H - 2),
+        fill: 'rgba(124,196,255,.14)', stroke: INFO, 'stroke-width': 1.6, 'stroke-dasharray': '6 4' }, svg);
     }
-    for (const y of hlines){
-      overlay.insertAdjacentHTML('beforeend', `<path d="M 0 ${y} L ${W} ${y}" stroke="rgba(255,255,255,.7)" stroke-width="1" stroke-dasharray="6 8"/>`);
+  }
+
+  // 九宮格
+  if (o.grid) {
+    const gs = { stroke: 'rgba(255,255,255,.62)', 'stroke-width': o.thumb ? .8 : 1 };
+    const sh = { stroke: 'rgba(0,0,0,.28)', 'stroke-width': o.thumb ? 1.6 : 2.4 };
+    for (const i of [1, 2]) {
+      for (const s of [sh, gs]) {
+        el('line', { x1: r2(W * i / 3), y1: 0, x2: r2(W * i / 3), y2: r2(H), ...s }, svg);
+        el('line', { x1: 0, y1: r2(H * i / 3), x2: W, y2: r2(H * i / 3), ...s }, svg);
+      }
+    }
+    if (!o.thumb) for (const i of [1, 2]) for (const j of [1, 2])
+      el('circle', { cx: r2(W * i / 3), cy: r2(H * j / 3), r: 2.6, fill: 'rgba(255,255,255,.85)' }, svg);
+  }
+
+  // 背景水平線（目標）：畫在輪廓下面，標籤最後再蓋上去
+  const hp = horizonPoint(tpl, g);
+  const hzOn = hp && o.horizon && (!o.thumb || tpl.kind !== 'person');   // 風景的縮圖也畫：水平線就是它的主體
+  if (hzOn) {
+    const hg = el('g', { transform: `rotate(${hp.rot} ${r2(hp.px)} ${r2(hp.py)})` }, svg);
+    el('line', { x1: -W, y1: r2(hp.py), x2: 2 * W, y2: r2(hp.py), stroke: 'rgba(0,0,0,.4)', 'stroke-width': o.thumb ? 2.4 : 3.2 }, hg);
+    el('line', { x1: -W, y1: r2(hp.py), x2: 2 * W, y2: r2(hp.py), stroke: HZN, 'stroke-width': o.thumb ? 1.4 : 1.7, 'stroke-dasharray': o.thumb ? '8 4' : '11 5' }, hg);
+  }
+
+  // 美食、風景的主體
+  if (o.fig && tpl.kind !== 'person') drawShapes(svg, tpl, W, H, o);
+
+  // 人物輪廓
+  if (o.fig && tpl.kind === 'person') {
+    const F = FIG[tpl.pose], hd = F.head;
+    const k = r2(g.k * 1000) / 1000, kx = o.mirror && F.asym ? -k : k;   // 不對稱的姿勢（坐姿）左右對調要整個翻面
+    const fg = el('g', { transform: `translate(${r2(g.cx)} ${r2(g.top)}) scale(${kx} ${k}) rotate(${g.rot} 0 50)` }, svg);
+    const layers = [
+      { stroke: 'rgba(0,0,0,.5)', sw: o.thumb ? 2.4 : 4.5, fill: 'none' },
+      { stroke: ACC, sw: o.thumb ? 1.2 : 2.2, fill: 'rgba(255,211,77,.10)', cls: 'fig-line' },
+    ];
+    for (const L of layers) {
+      const a = { fill: L.fill, stroke: L.stroke, 'stroke-width': L.sw, 'vector-effect': 'non-scaling-stroke', 'stroke-linejoin': 'round', class: L.cls };
+      el('path', { d: F.d, ...a }, fg);
+      el('ellipse', { cx: hd.cx, cy: hd.cy, rx: hd.rx, ry: hd.ry, ...a }, fg);
+    }
+    if (!o.thumb) {   // 眼睛高度的短橫線，對眼睛用
+      const ey = g.lm.eye * 100;
+      el('line', { x1: -hd.rx * .75, y1: ey, x2: hd.rx * .75, y2: ey, stroke: ACC, 'stroke-width': 1.4, 'vector-effect': 'non-scaling-stroke', 'stroke-dasharray': '3 2' }, fg);
+    }
+    if (tpl.shapes) drawShapes(svg, tpl, W, H, o);                // 人像也可以帶道具（窗邊座位桌上的咖啡）
+  }
+
+  if (hzOn && o.labels) {            // 標籤放在空的那一側：人偏左就放右邊
+    const hg = el('g', { transform: `rotate(${hp.rot} ${r2(hp.px)} ${r2(hp.py)})` }, svg);
+    const onRight = g.cx < W * .45;
+    pill(hg, W, onRight ? W - 6 : 6, hp.py, hzLabel(tpl), 'hzn', onRight ? 'end' : 'start');
+  }
+
+  // 標示
+  if (o.labels) {
+    const rightSide = g.cx > W * .6;
+    for (const m of tpl.marks) {
+      if (m.t === 'hline') {
+        const y = Math.min(H - 1, yOf(m.y, g, H)), c = toneColor(m.tone);
+        el('line', { x1: 0, y1: r2(y), x2: W, y2: r2(y), stroke: 'rgba(0,0,0,.35)', 'stroke-width': 3 }, svg);
+        el('line', { x1: 0, y1: r2(y), x2: W, y2: r2(y), stroke: c, 'stroke-width': 1.6, 'stroke-dasharray': '7 4' }, svg);
+        const py = y > H - 16 ? y - 12 : y < 16 ? y + 12 : y;
+        pill(svg, W, rightSide ? 6 : W - 6, py, m.text, m.tone, rightSide ? 'start' : 'end');
+      } else if (m.t === 'bracket') {
+        const y0 = yOf(m.y0, g, H), y1 = yOf(m.y1, g, H);
+        const x = rightSide ? W - 16 : 16;
+        const s = { stroke: ACC, 'stroke-width': 1.6 };
+        el('line', { x1: x, y1: r2(y0 + 1), x2: x, y2: r2(y1 - 1), ...s }, svg);
+        el('line', { x1: x - 5, y1: r2(y0 + 1), x2: x + 5, y2: r2(y0 + 1), ...s }, svg);
+        el('line', { x1: x - 5, y1: r2(y1 - 1), x2: x + 5, y2: r2(y1 - 1), ...s }, svg);
+        pill(svg, W, rightSide ? x - 8 : x + 8, (y0 + y1) / 2, m.text, 'key', rightSide ? 'end' : 'start');
+      } else if (m.t === 'label') {
+        pill(svg, W, (o.mirror ? 1 - m.x : m.x) * W, m.y * H, m.text, m.tone || 'key', 'middle');
+      } else if (m.t === 'vline') {
+        const x = m.x != null ? (o.mirror ? 1 - m.x : m.x) * W : g.cx;
+        el('line', { x1: r2(x), y1: 0, x2: r2(x), y2: r2(H), stroke: 'rgba(0,0,0,.35)', 'stroke-width': 3 }, svg);
+        el('line', { x1: r2(x), y1: 0, x2: r2(x), y2: r2(H), stroke: ACC, 'stroke-width': 1.8, 'stroke-dasharray': '7 4' }, svg);
+        pill(svg, W, x, 16, m.text, 'key', 'middle');
+      } else if (m.t === 'look') {
+        const dir = g.cx < W / 2 ? 1 : -1;
+        const y = yOf('eye', g, H) + 34;
+        const x0 = g.cx + dir * 34, x1 = g.cx + dir * 92;
+        const s = { stroke: ACC, 'stroke-width': 1.8, fill: 'none', 'stroke-linecap': 'round' };
+        el('line', { x1: r2(x0), y1: r2(y), x2: r2(x1), y2: r2(y), ...s }, svg);
+        el('path', { d: `M${r2(x1 - dir * 7)} ${r2(y - 5)} L${r2(x1)} ${r2(y)} L${r2(x1 - dir * 7)} ${r2(y + 5)}`, ...s }, svg);
+        pill(svg, W, x1 + dir * 4, y + 18, m.text, 'key', dir > 0 ? 'end' : 'start');
+      } else if (m.t === 'zone') {
+        const y0 = yOf(m.y0, g, H), y1 = yOf(m.y1, g, H);
+        pill(svg, W, W / 2, (y0 + y1) / 2, m.text, 'warn', 'middle');
+      } else if (m.t === 'cells') {
+        const x0 = (o.mirror ? 1 - m.x1 : m.x0) * W;
+        pill(svg, W, x0 + 6, m.y0 * H + 14, m.text, 'info', 'start');
+      } else if (m.t === 'note') {
+        pill(svg, W, o.mirror ? W - 6 : 6, yOf(m.y, g, H), m.text, 'info', o.mirror ? 'end' : 'start');
+      } else if (m.t === 'crop') {
+        const pt = g.top, pb = g.top + g.s;
+        const ch = (pb - pt) / .8, bottom = Math.min(H, pb + 3), topY = bottom - ch;
+        const cw = ch * W / H, x0 = g.cx - cw / 2;
+        el('rect', { x: r2(x0), y: r2(topY), width: r2(cw), height: r2(ch), fill: 'none', stroke: '#fff', 'stroke-width': 1.4, 'stroke-dasharray': '4 4' }, svg);
+        pill(svg, W, x0 + 4, topY + 12, m.text, 'info', 'start');
+      }
     }
   }
+  return g;
+}
 
-  if (state.horizon){
-    const h = t.horizon * H;
-    hzn.insertAdjacentHTML('beforeend', `<path d="M 0 ${h} L ${W} ${h}" stroke="rgba(124,196,255,.92)" stroke-width="2" stroke-dasharray="12 10"/>`);
-    hzn.insertAdjacentHTML('beforeend', `<circle cx="${W/2}" cy="${h}" r="5" fill="rgba(124,196,255,.9)"/>`);
-  }
-
-  if (state.figure){
-    const cx = t.headX * W;
-    const cy = t.headY * H;
-    const r = t.headR * Math.min(W,H);
-    const bodyW = t.bodyW * W;
-    const top = t.top * H;
-    const bottom = t.bottom * H;
-    const shoulderY = top + (bottom-top)*0.28;
-    const chestY = top + (bottom-top)*0.42;
-    const hipY = top + (bottom-top)*0.58;
-    const legY = top + (bottom-top)*0.8;
-
-    const path = [
-      `M ${cx-r*0.8} ${cy-r*0.5}`,
-      `Q ${cx} ${cy-r*1.3} ${cx+r*0.8} ${cy-r*0.5}`,
-      `Q ${cx+r*0.9} ${cy+r*0.1} ${cx+r*0.7} ${cy+r*0.7}`,
-      `L ${cx+r*0.9} ${shoulderY}`,
-      `L ${cx+bodyW*0.36} ${chestY}`,
-      `L ${cx+bodyW*0.28} ${hipY}`,
-      `L ${cx+bodyW*0.35} ${legY}`,
-      `L ${cx+bodyW*0.13} ${bottom}`,
-      `L ${cx-bodyW*0.13} ${bottom}`,
-      `L ${cx-bodyW*0.35} ${legY}`,
-      `L ${cx-bodyW*0.28} ${hipY}`,
-      `L ${cx-bodyW*0.36} ${chestY}`,
-      `L ${cx-bodyW*0.9} ${shoulderY}`,
-      `L ${cx-r*0.7} ${cy+r*0.7}`,
-      `Q ${cx-r*0.9} ${cy+r*0.1} ${cx-r*0.8} ${cy-r*0.5}`,
-      'Z'
-    ].join(' ');
-
-    overlay.insertAdjacentHTML('beforeend', `<path d="${path}" fill="rgba(255,211,77,.18)" stroke="rgba(255,211,77,.96)" stroke-width="2" stroke-linejoin="round"/>`);
-  }
-
-  if (state.labels){
-    overlay.insertAdjacentHTML('beforeend', `<text x="${W*0.5}" y="${H*0.07}" text-anchor="middle" font-size="${Math.max(11, W*0.034)}" fill="rgba(255,255,255,.95)" font-weight="700">${t.label}</text>`);
-    overlay.insertAdjacentHTML('beforeend', `<line x1="${W*0.22}" y1="${H*0.26}" x2="${W*0.78}" y2="${H*0.26}" stroke="rgba(255,255,255,.65)" stroke-width="1.2"/>`);
+/* 美食、風景的主體：跟人物輪廓同一套畫法（黑邊＋黃線＋淡黃底），對齊時一樣變綠 */
+function drawShapes(svg, tpl, W, H, o) {
+  const X = x => (o.mirror ? 1 - x : x) * W;
+  const layers = [
+    { stroke: 'rgba(0,0,0,.5)', sw: o.thumb ? 2.4 : 4.5, fill: 'none' },
+    { stroke: ACC, sw: o.thumb ? 1.2 : 2.2, fill: 'rgba(255,211,77,.10)', cls: 'fig-line' },
+  ];
+  for (const L of layers) {
+    const a = { stroke: L.stroke, 'stroke-width': L.sw, 'stroke-linejoin': 'round', 'stroke-linecap': 'round', class: L.cls };
+    for (const s of tpl.shapes) {
+      if (s.t === 'circle') el('circle', { cx: r2(X(s.cx)), cy: r2(s.cy * H), r: r2(s.r * W), fill: L.fill, ...a }, svg);
+      else if (s.t === 'ellipse') el('ellipse', { cx: r2(X(s.cx)), cy: r2(s.cy * H), rx: r2(s.rx * W), ry: r2(s.ry * W), fill: L.fill, ...a }, svg);
+      else if (s.t === 'rrect') {
+        const x0 = o.mirror ? 1 - s.x - s.w : s.x;
+        el('rect', { x: r2(x0 * W), y: r2(s.y * H), width: r2(s.w * W), height: r2(s.h * H), rx: r2(s.r * W), fill: L.fill, ...a }, svg);
+      } else if (s.t === 'path') {
+        const d = smooth(s.pts.map(([x, y]) => [X(x), y * H])) + (s.close ? ' Z' : '');
+        el('path', { d, fill: s.close ? L.fill : 'none', ...a }, svg);
+      } else if (s.t === 'poly') {                               // 直邊多邊形（杯身這種不能被圓滑化的）
+        el('polygon', { points: s.pts.map(([x, y]) => `${r2(X(x))},${r2(y * H)}`).join(' '), fill: L.fill, ...a }, svg);
+      } else if (s.t === 'lines') {
+        for (const [[x1, y1], [x2, y2]] of s.segs) el('line', { x1: r2(X(x1)), y1: r2(y1 * H), x2: r2(X(x2)), y2: r2(y2 * H), ...a }, svg);
+      }
+    }
   }
 }
 
-function renderTemplateCards(){
-  tplList.innerHTML = '';
-  templates.forEach((template, index) => {
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'tpl-card' + (index === state.selected ? ' on' : '');
-    btn.innerHTML = `
-      <svg viewBox="0 0 54 72" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <rect width="54" height="72" rx="8" fill="#0f1012"/>
-        <path d="M18 16c0-4 3-7 7-7s7 3 7 7v5c0 4-3 7-7 7s-7-3-7-7v-5zm-2 17c0-5 4-9 9-9h2c5 0 9 4 9 9v2l3 17H13l3-17v-2z" fill="rgba(255,211,77,.88)"/>
-        <path d="M12 54h30v6H12z" fill="rgba(255,255,255,.45)"/>
-      </svg>
-      <div>
-        <b>${template.name}</b>
-        <span>${template.summary}</span>
-        <span class="k">${template.mnemonic}</span>
-      </div>
-    `;
-    btn.addEventListener('click', () => setSelectedTemplate(index));
-    tplList.appendChild(btn);
-  });
+/* ── 側面鏡位圖 ── */
+function sideDiagram(tpl, mirror) {
+  if (tpl.kind !== 'person') return sideDiagramObj(tpl);
+  const W = 340, H = 214, G = 196, SX = 262;
+  const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, class: 'side', role: 'img', 'aria-label': '手機與被攝者的側面位置示意' });
+  const pose = tpl.sidePose || tpl.pose;                        // Y2K 的畫面輪廓是變形的，鏡位圖要照真人比例畫
+  const sh = { stand: 158, crouch: 98, sit: 124 }[pose], top = G - sh;
+  const frac = tpl.cam.sideFrac != null ? tpl.cam.sideFrac : LM[pose][tpl.cam.at] + (tpl.cam.off || 0);   // 手機高度（從頭頂算的身高比例）
+  const cx = 74, cy = top + frac * sh;
+  const ang = -tpl.cam.tilt;                                   // SVG 角度：正＝往下
+  const fov = { 0.5: 38, 1: 24, 2: 13 }[tpl.lens];
+  const far = W - 4, dx = far - cx;
+  const ty = a => r2(cy + Math.tan(a * D2R) * dx);
+
+  el('line', { x1: 8, y1: G, x2: W - 8, y2: G, stroke: '#3a3f47', 'stroke-width': 2 }, svg);
+  el('polygon', { points: `${cx},${r2(cy)} ${far},${ty(ang - fov)} ${far},${ty(ang + fov)}`, fill: 'rgba(255,211,77,.12)' }, svg);
+  el('line', { x1: cx, y1: r2(cy), x2: far, y2: ty(ang), stroke: ACC, 'stroke-width': 1.4, 'stroke-dasharray': '5 4' }, svg);
+  // 背景水平線＝手機高度那個水平面，一路延伸到遠方
+  el('line', { x1: 8, y1: r2(cy), x2: W - 8, y2: r2(cy), stroke: HZN, 'stroke-width': 1.3, 'stroke-dasharray': '7 4', opacity: .9 }, svg);
+  const hl = el('text', { x: cx + 16, y: r2(cy - 5), 'font-size': 10.5, fill: HZN, 'font-weight': 600 }, svg);
+  hl.textContent = '背景水平線';
+
+  const body = '#5a626e', arm = '#6e7783';
+  const L = (x1, y1, x2, y2, w, c = body) => el('line', { x1, y1, x2, y2, stroke: c, 'stroke-width': w, 'stroke-linecap': 'round' }, svg);
+  let hx, mx;                                                   // hx 頭的位置、mx 身上高度標記的位置
+  if (pose === 'stand') {
+    L(SX + 1, top + 31, SX + 2, top + 74, 22); L(SX, top + 80, SX, G - 7, 13); L(SX - 2, G - 4, SX - 15, G - 4, 7);
+    L(SX + 2, top + 35, SX - 1, top + 77, 8, arm); hx = SX; mx = SX - 14;
+  } else if (pose === 'crouch') {
+    L(SX + 2, top + 31, SX + 8, top + 58, 22); L(SX + 8, top + 61, SX - 16, top + 55, 15);
+    L(SX - 16, top + 57, SX - 12, G - 7, 12); L(SX - 12, G - 4, SX - 26, G - 4, 7);
+    L(SX, top + 35, SX - 11, top + 22, 8, arm); hx = SX - 3; mx = SX - 12;
+  } else {                                                      // 坐姿：只坐椅子前 1/3、腿往前伸
+    const seat = G - 48;
+    L(SX - 2, seat + 3, SX + 28, seat + 3, 5, '#3f454e'); L(SX + 2, seat + 5, SX + 2, G - 1, 4, '#3f454e'); L(SX + 24, seat + 5, SX + 24, G - 1, 4, '#3f454e');
+    L(SX + 6, seat - 4, SX + 5, top + 32, 22); L(SX + 5, seat - 3, SX - 22, seat + 5, 15);
+    L(SX - 22, seat + 7, SX - 48, G - 8, 12); L(SX - 48, G - 5, SX - 60, G - 5, 7);
+    L(SX + 6, top + 36, SX - 4, seat - 6, 8, arm); hx = SX + 3; mx = SX - 10;
+  }
+  el('circle', { cx: hx, cy: top + 12, r: 12, fill: body }, svg);
+  el('circle', { cx: hx - 7, cy: top + 10.5, r: 1.8, fill: '#d7dbe0' }, svg);
+
+  // 身上標出「手機要跟這裡一樣高」
+  el('circle', { cx: mx, cy: r2(cy), r: 3.8, fill: HZN }, svg);
+  const pt = el('text', { x: SX + 20, y: r2(cy - 5), 'font-size': 12, fill: HZN, 'font-weight': 700 }, svg);
+  pt.textContent = partName(tpl.cam);
+
+  // 手機（側面）：鏡頭點畫在朝向被攝者那一側
+  const pg = el('g', { transform: `translate(${cx} ${r2(cy)}) rotate(${ang})` }, svg);
+  el('rect', { x: -4, y: -18, width: 8, height: 36, rx: 2.5, fill: '#e8e8e8' }, pg);
+  el('circle', { cx: 5, cy: tpl.flip ? 13 : -13, r: 2.6, fill: ACC }, pg);
+
+  const tl = tpl.cam.tilt;
+  const tt = el('text', { x: cx, y: r2(Math.min(G - 6, cy + 36)), 'font-size': 12, fill: '#e8e8e8', 'text-anchor': 'middle', 'font-weight': 600 }, svg);
+  tt.textContent = Math.abs(tl) <= 1 ? '水平' : (tl > 0 ? `往上翹 ${tl}°` : `往下 ${-tl}°`);
+  const lt = el('text', { x: cx, y: r2(Math.max(14, cy - 26)), 'font-size': 11, fill: '#9aa0a8', 'text-anchor': 'middle' }, svg);
+  lt.textContent = { 0.5: '0.5x', 1: '1x', 2: '2x' }[tpl.lens];
+
+  // 左上小圖：從背面看手機怎麼拿（歪 10°／倒過來）
+  if (tpl.flip || tpl.roll) {
+    const rot = tpl.flip ? 180 : tpl.roll * (mirror ? -1 : 1);
+    const ig = el('g', { transform: `translate(24 34) rotate(${rot})` }, svg);
+    el('rect', { x: -9, y: -16, width: 18, height: 32, rx: 3.5, fill: 'none', stroke: '#e8e8e8', 'stroke-width': 1.6 }, ig);
+    el('circle', { cx: 0, cy: -11, r: 2.2, fill: ACC }, ig);
+    const it = el('text', { x: 42, y: 38, 'font-size': 12, fill: '#e8e8e8', 'font-weight': 600 }, svg);
+    it.textContent = tpl.flip ? '手機倒過來拿' : (rot < 0 ? '手機往左歪 10°' : '手機往右歪 10°');
+  }
+  return svg;
 }
 
-function renderDetail(){
-  const template = templates[state.selected];
-  detail.innerHTML = `
-    <div class="dhead">
-      <h2>${template.name}</h2>
-      <span class="tag">${template.mnemonic}</span>
-    </div>
-    <div class="mn">${template.summary}</div>
+/* 美食、風景的鏡位圖：桌子＋盤子（手機繞著盤子轉到 90°／45°／平拍）或遠山＋地面 */
+function sideDiagramObj(tpl) {
+  const W = 340, H = 214, G = 196;
+  const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, class: 'side', role: 'img', 'aria-label': '手機與拍攝對象的側面位置示意' });
+  const tl = tpl.cam.tilt, ang = -tl;                          // SVG 角度：正＝往下
+  const fov = { 0.5: 38, 1: 24, 2: 13 }[tpl.lens];
+  const gray = '#5a626e', dark = '#3f454e';
+  const dg = tpl.diag || {};
+  const food = dg.kind ? dg.kind === 'table' : tpl.cat === 'food';
+  const far = dg.far || 'mountain', near = dg.near || (tpl.id === 'fore' ? 'rock' : null);
+  let cx, cy, L;
+  const TY = 136, PX = 252;                                    // 美食：桌面高度、盤子位置
+  if (food) {
+    const R = 104, a = Math.max(0, -tl) * D2R, aimY = tpl.id === 'foodeye' ? TY - 20 : TY - 6;
+    cx = PX - R * Math.cos(a); cy = aimY - R * Math.sin(a); L = R + 26;
+  } else {
+    cx = 64; cy = tpl.cam.low ? G - 48 : G - 118; L = 250;
+  }
+  el('line', { x1: 8, y1: G, x2: W - 8, y2: G, stroke: '#3a3f47', 'stroke-width': 2 }, svg);
+  // 視野與鏡頭軸先畫，主體蓋在上面
+  const ray = d => [r2(cx + L * Math.cos(d * D2R)), r2(cy + L * Math.sin(d * D2R))];
+  const [ax, ay] = ray(ang), [bx, by] = ray(ang - fov), [qx, qy] = ray(ang + fov);
+  el('polygon', { points: `${r2(cx)},${r2(cy)} ${bx},${by} ${qx},${qy}`, fill: 'rgba(255,211,77,.12)' }, svg);
+  el('line', { x1: r2(cx), y1: r2(cy), x2: ax, y2: ay, stroke: ACC, 'stroke-width': 1.4, 'stroke-dasharray': '5 4' }, svg);
+  if (food) {
+    el('line', { x1: 150, y1: TY, x2: 332, y2: TY, stroke: dark, 'stroke-width': 5, 'stroke-linecap': 'round' }, svg);
+    el('line', { x1: 166, y1: TY, x2: 166, y2: G, stroke: dark, 'stroke-width': 4 }, svg);
+    el('line', { x1: 316, y1: TY, x2: 316, y2: G, stroke: dark, 'stroke-width': 4 }, svg);
+    if (tpl.id === 'foodeye') {
+      el('rect', { x: PX - 13, y: TY - 42, width: 26, height: 40, rx: 5, fill: gray }, svg);
+      el('rect', { x: PX - 13, y: TY - 30, width: 26, height: 7, fill: '#8a919b' }, svg);
+    } else {
+      el('ellipse', { cx: PX, cy: TY - 3, rx: 27, ry: 3.2, fill: '#8a919b' }, svg);
+      el('ellipse', { cx: PX, cy: TY - 8, rx: 15, ry: 6.5, fill: gray }, svg);
+    }
+  } else {
+    if (far === 'wall') {                                      // 素色牆面當背景
+      el('rect', { x: 300, y: G - 150, width: 32, height: 150, fill: '#2c3138' }, svg);
+    } else if (far === 'building') {                           // 店面：側面看是一面牆＋招牌＋門
+      el('rect', { x: 262, y: G - 112, width: 70, height: 112, fill: '#2c3138' }, svg);
+      el('rect', { x: 256, y: G - 96, width: 10, height: 22, fill: '#8a919b' }, svg);
+      el('rect', { x: 262, y: G - 52, width: 6, height: 52, fill: '#3f454e' }, svg);
+    } else if (far === 'room') {                               // 店內：天花板＋後牆
+      el('polyline', { points: `150,22 330,22 330,${G}`, fill: 'none', stroke: '#3f454e', 'stroke-width': 4 }, svg);
+      el('rect', { x: 236, y: G - 34, width: 44, height: 5, fill: dark }, svg);
+      el('rect', { x: 255, y: G - 29, width: 5, height: 29, fill: dark }, svg);
+    } else {
+      el('path', { d: `M178 ${G} L222 ${G - 50} L248 ${G - 32} L284 ${G - 70} L334 ${G} Z`, fill: '#2c3138' }, svg);
+    }
+    if (near === 'rock') el('path', { d: `M100 ${G} Q108 ${G - 30} 126 ${G - 28} Q146 ${G - 24} 150 ${G} Z`, fill: gray }, svg);
+    if (near === 'cup') {                                      // 手拿的杯子：離鏡頭很近
+      el('polygon', { points: `${cx + 30},${cy - 4} ${cx + 46},${cy - 4} ${cx + 44},${cy + 18} ${cx + 32},${cy + 18}`, fill: gray }, svg);
+      el('rect', { x: cx + 28, y: cy - 8, width: 20, height: 4, rx: 1.5, fill: '#8a919b' }, svg);
+    }
+    // 背景水平線＝手機高度那個水平面
+    el('line', { x1: 8, y1: r2(cy), x2: W - 8, y2: r2(cy), stroke: HZN, 'stroke-width': 1.3, 'stroke-dasharray': '7 4', opacity: .9 }, svg);
+    const hl = el('text', { x: W - 12, y: r2(cy - 6), 'font-size': 10.5, fill: HZN, 'font-weight': 600, 'text-anchor': 'end' }, svg);
+    hl.textContent = '遠處的水平線（跟手機一樣高）';
+  }
+  // 手機（側面），鏡頭點畫在拍攝方向那一側
+  const pg = el('g', { transform: `translate(${r2(cx)} ${r2(cy)}) rotate(${ang})` }, svg);
+  el('rect', { x: -4, y: -18, width: 8, height: 36, rx: 2.5, fill: '#e8e8e8' }, pg);
+  el('circle', { cx: 5, cy: -13, r: 2.6, fill: ACC }, pg);
+  const tt = el('text', { x: 14, y: 24, 'font-size': 12.5, fill: '#e8e8e8', 'font-weight': 700 }, svg);
+  tt.textContent = tl <= -85 ? '鏡頭正對下方（手機跟桌面平行）' : Math.abs(tl) <= 1 ? '鏡頭水平' : tl > 0 ? `鏡頭往上 ${tl}°` : `鏡頭往下 ${-tl}°`;
+  const lt = el('text', { x: 14, y: 41, 'font-size': 11, fill: '#9aa0a8' }, svg);
+  lt.textContent = ({ 0.5: '0.5x', 1: '1x', 2: '2x' }[tpl.lens]) + (food ? '' : tpl.cam.low ? '・蹲低' : '・站著');
+  return svg;
+}
+
+/* ── 模板清單與說明 ── */
+function fmtT(s) { return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; }
+function renderList() {
+  // 電腦：右欄的大卡片；手機：取景框下面那一列小卡（左右滑）。兩份都用 data-i 對回模板
+  // 手機的小卡只顯示目前分類（人像／美食／風景），分類切換在下面那列
+  const box = $('#tplList'), strip = $('#tplStrip'), cats = $('#cats');
+  box.textContent = ''; strip.textContent = ''; cats.textContent = '';
+  for (const [c, label] of CATS) {
+    const h = document.createElement('div'); h.className = 'tpl-group'; h.textContent = label; box.appendChild(h);
+    const cb = document.createElement('button'); cb.dataset.cat = c; cb.textContent = label;
+    cb.addEventListener('click', () => pickCat(c)); cats.appendChild(cb);
+    TPLS.forEach((t, i) => {
+      if (t.cat !== c) return;
+      const thumb = () => {
+        const svg = el('svg', { 'aria-hidden': 'true' });
+        drawOverlay(svg, t, { ratio: '3:4', grid: true, fig: true, labels: false, horizon: true, thumb: true, bg: '#2a2e34' });
+        return svg;
+      };
+      const b = document.createElement('button');
+      b.className = 'tpl-card' + (t.id === st.tpl ? ' on' : '');
+      b.dataset.i = i;
+      b.appendChild(thumb());
+      const d = document.createElement('div');
+      const key = i < 10 ? `${(i + 1) % 10}・` : '';
+      d.innerHTML = `<b>${t.name}</b><span>${t.tag}</span><span class="k">${key}${{ 0.5: '0.5x', 1: '1x', 2: '2x' }[t.lens]}</span>`;
+      b.appendChild(d);
+      b.addEventListener('click', () => selectTpl(i, true));
+      box.appendChild(b);
+
+      const m = document.createElement('button');
+      m.className = 'mini' + (t.id === st.tpl ? ' on' : '');
+      m.dataset.i = i;
+      m.appendChild(thumb());
+      const mb = document.createElement('b'); mb.textContent = t.name; m.appendChild(mb);
+      m.addEventListener('click', () => selectTpl(i, true));
+      strip.appendChild(m);
+    });
+  }
+}
+// 換分類：回到這個分類上次用的模板，沒用過就第一個
+function pickCat(c) {
+  if (cur().cat === c) return;
+  let i = TPLS.findIndex(t => t.id === (st.lastByCat || {})[c] && t.cat === c);
+  if (i < 0) i = TPLS.findIndex(t => t.cat === c);
+  selectTpl(i, true);
+}
+function renderDetail() {
+  const t = cur(), v = SRCS[t.src[0]], isP = t.kind === 'person';
+  const srcHref = v.yt ? `https://www.youtube.com/watch?v=${v.yt}&t=${t.src[1]}s` : v.url;
+  const srcWhere = v.yt ? fmtT(t.src[1]) : t.src[1];
+  const link = (s, where) => s.url || s.yt
+    ? `<a href="${s.yt ? `https://www.youtube.com/watch?v=${s.yt}&t=${where}s` : s.url}" target="_blank" rel="noopener">${s.site}〈${s.title}〉${s.yt ? fmtT(where) : (where || '')}</a>`
+    : `${s.site}（${s.title}）`;
+  // 第二個出處＋「哪些是這頁自己加的」說明：來源只講到一部分時要講清楚，不能讓整張卡看起來都有出處
+  const srcHtml = (srcHref ? `<a href="${srcHref}" target="_blank" rel="noopener">${v.site}〈${v.title}〉${srcWhere}</a>` : `${v.site}（${v.title}）`)
+    + (t.src2 ? `；${link(SRCS[t.src2[0]], t.src2[1])}` : '')
+    + (t.srcNote ? `<br><span class="note">${t.srcNote}</span>` : '');
+  const hzRow = t.noHorizon
+    ? `<dt style="color:${HZN}">背景水平線</dt><dd>手機在頭頂上方往下拍，畫面裡看不到水平線<div class="note">所以這個模板沒有藍線，角度看右上角的提示</div></dd>`
+    : isP
+    ? `<dt style="color:${HZN}">背景水平線</dt><dd>遠處的地平線、海平線會穿過對方的<b>${partName(t.cam)}</b>——它穿過哪裡，手機就在多高<div class="note">相機畫面上的藍色虛線就是它；手機有陀螺儀還會多一條實線，兩條疊上就變綠</div></dd>`
+    : t.hz != null
+      ? `<dt style="color:${HZN}">水平線</dt><dd>${t.hzText}<div class="note">相機畫面上的藍色虛線；手機有陀螺儀還會多一條實線，疊上就變綠</div></dd>`
+      : '';
+  const orient = t.cat === 'scene' ? '直拍<div class="note">想橫拍就把手機轉 90°，水平線一樣放在三分線上；這頁的框只畫直的</div>' : '直拍';
+  const box = $('#detail'); box.textContent = '';
+  const lensTxt = { 0.5: '0.5x 超廣角', 1: '1x 主鏡頭', 2: '2x' }[t.lens];
+  const p = t.pitch, pTxt = a => a === 0 ? '0°' : (a > 0 ? `↑${a}°` : `↓${-a}°`);
+  box.innerHTML = `
+    <div class="dhead"><h2>${t.name}</h2><span class="tag">${t.tag}</span></div>
+    <p class="mn">口訣：${t.mn}</p>
     <div class="dgrid">
       <div>
-        <svg class="side" viewBox="0 0 360 230" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <rect width="360" height="230" fill="#1d2125" rx="10"/>
-          <rect x="30" y="20" width="300" height="190" rx="10" fill="#14181c" stroke="rgba(255,255,255,.18)"/>
-          <path d="M86 74c0-20 16-36 36-36h20c20 0 36 16 36 36v8l42 44 12 34 21 30H90l18-30 14-34 42-44v-8z" fill="rgba(255,211,77,.18)" stroke="rgba(255,211,77,.96)" stroke-width="2"/>
-          <path d="M80 172H280" stroke="rgba(124,196,255,.95)" stroke-width="2" stroke-dasharray="8 8"/>
-          <path d="M120 20V210M240 20V210" stroke="rgba(255,255,255,.18)" stroke-width="1"/>
-        </svg>
+        <div id="sideBox"></div>
+        <dl class="params">
+          <dt>鏡頭</dt><dd>${lensTxt}</dd>
+          <dt>${isP ? '手機高度' : '手機位置'}</dt><dd>${t.cam.hText}${t.cam.hNote ? `<div class="note">${t.cam.hNote}</div>` : ''}</dd>
+          <dt>鏡頭角度</dt><dd>${t.cam.tiltText}<div class="note">陀螺儀判定範圍 ${pTxt(Math.max(p[0], -90))}～${pTxt(p[1])}${t.cam.tiltNote ? '；' + t.cam.tiltNote : ''}</div></dd>
+          ${hzRow}
+          <dt>直／橫</dt><dd>${orient}</dd>
+        </dl>
       </div>
       <div>
-        <h3>拍法</h3>
-        <dl class="params">
-          ${template.params.map(([k,v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}
-        </dl>
-        <h3>避免</h3>
-        <ul class="avoid">
-          ${template.avoid.map(item => `<li>${item}</li>`).join('')}
-        </ul>
-        <div class="src">出處：${template.source}</div>
+        <h3>照這個順序</h3>
+        <ol>${t.steps.map(s => `<li>${s}</li>`).join('')}</ol>
+        <h3>不要這樣</h3>
+        <ul class="avoid">${t.avoid.map(s => `<li>${s}</li>`).join('')}</ul>
       </div>
     </div>
-  `;
+    <p class="src">出處：${srcHtml}</p>`;
+  $('#sideBox').appendChild(sideDiagram(t, st.mirror));
 }
 
-function setSelectedTemplate(index){
-  state.selected = index;
-  renderTemplateCards();
-  renderDetail();
-  drawGuides();
-  setText(hudName, templates[index].name);
-  setText(hudMn, templates[index].mnemonic);
-}
+/* ── 相機 ── */
+const video = $('#video'), vp = $('#vp');
+let stream = null, track = null, caps = {}, isFront = false, hwZoom = false, facing = 'environment', camCount = 0;
 
-function applyRatioMode(){
-  const nine = state.ratio === '9:16';
-  vp.dataset.ratio = nine ? '9:16' : '3:4';
-  btnRatio.textContent = nine ? '3:4' : '9:16';
-  btnRatio.setAttribute('aria-pressed', String(nine));
-  drawGuides();
+function msg(t) { $('#phMsg').textContent = t; $('#ph').hidden = false; $('#btnStart').hidden = false; $('#btnStart').textContent = '再試一次'; }
+// 開不了相機時講清楚是哪一種、怎麼救——手機上看不到 console，畫面上的這句是唯一的線索
+function camErrText(e) {
+  const n = e && e.name;
+  if (n === 'NotAllowedError' || n === 'SecurityError') {
+    if (IN_APP) return IN_APP_TXT;
+    return IOS ? '相機權限被拒絕了：到「設定 → Safari → 相機」改成「詢問」或「允許」，回來再按一次'
+               : '相機權限被拒絕了：點網址列左邊的圖示 →「權限」→ 相機改成「允許」，再按一次';
+  }
+  if (n === 'NotReadableError' || n === 'AbortError' || n === 'TrackStartError') return '相機被別的 App 佔用（相機、視訊通話…），關掉再按一次';
+  if (n === 'NotFoundError' || n === 'OverconstrainedError') return '找不到可以用的相機';
+  return '開不了相機（' + (n || '未知') + '）：' + (e && e.message || e);
 }
-
-function setZoom(levelValue){
-  state.zoom = clamp(levelValue, 0.5, 2);
-  const zMap = [0.5, 1, 2];
-  const found = zMap.find(v => Math.abs(v - state.zoom) < 0.01) || 1;
-  [...zoomSeg.querySelectorAll('button')].forEach(btn => {
-    const on = Number(btn.dataset.z) === found;
-    btn.classList.toggle('on', on);
-  });
-  video.style.transform = `${state.mirror ? 'scaleX(-1)' : ''} scale(${state.zoom})`;
-}
-
-async function startCamera(){
+// 診斷事件：頁面本身不做任何事；手機測試版的複本會聽它、把結果送回電腦（手機上看不到 console）
+function camdiag(ev, d) { try { document.dispatchEvent(new CustomEvent('camdiag', { detail: Object.assign({ ev }, d) })); } catch (e) {} }
+/* 超廣角：有些手機把 0.5x 做成同一顆鏡頭的 zoom 下限（caps.zoom.min ≤ 0.5），
+   iPhone 則是另一顆「後置超廣角相機」裝置——要換裝置重開串流。兩條路都試，換不過去就記下來不再試。 */
+let onUW = false, uwId = null, uwBroken = false;
+async function startCamera(opts) {
+  const wantUW = !!(opts && opts.uw && uwId && !uwBroken);
+  if (!window.isSecureContext) { msg('網址要是 https 開頭，瀏覽器才准開相機（電腦直接開這個檔案可以）'); return; }
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-    ph.querySelector('.msg').textContent = '此瀏覽器不支援相機功能';
-    return;
+    msg(IN_APP ? IN_APP_TXT : '這個瀏覽器不能開網頁相機，請用 Safari 或 Chrome 開這個網址'); return;
   }
-  const constraints = {
-    audio:false,
-    video:{
-      facingMode: state.useRear ? {ideal:'environment'} : {ideal:'user'},
-      width:{ideal:1280},
-      height:{ideal:1920}
-    }
-  };
+  stopCamera();
+  $('#phMsg').textContent = '正在開啟相機…瀏覽器問的時候按「允許」'; $('#btnStart').hidden = true;
+  // 先要最高畫質（4032×3024＝手機拍照的 1200 萬畫素；給不到時瀏覽器會挑最接近的），
+  // 失敗就一路放寬到「隨便一顆鏡頭」。權限被拒就不必再試
+  const hi = { width: { ideal: 4032 }, height: { ideal: 3024 } };
+  const tries = wantUW ? [{ video: { deviceId: { exact: uwId }, ...hi }, audio: false }] : [];
+  tries.push(
+    { video: { facingMode: { ideal: facing }, ...hi }, audio: false },
+    { video: { facingMode: { ideal: facing }, width: { ideal: 1920 }, height: { ideal: 1440 } }, audio: false },
+    { video: { facingMode: facing }, audio: false },
+    { video: true, audio: false },
+  );
+  let err = null;
+  for (const c of tries) {
+    try { stream = await navigator.mediaDevices.getUserMedia(c); break; }
+    catch (e) { err = e; stream = null; if (e && (e.name === 'NotAllowedError' || e.name === 'SecurityError')) break; }
+  }
+  if (!stream) { msg(camErrText(err)); return; }
+  video.srcObject = stream;
+  try { await video.play(); } catch (e) {}
+  track = stream.getVideoTracks()[0];
+  caps = (track.getCapabilities && track.getCapabilities()) || {};
+  const s = track.getSettings ? track.getSettings() : {};
+  isFront = (s.facingMode || 'user') === 'user';     // 筆電視訊鏡頭不回報 facingMode，當前鏡頭處理（畫面鏡像）
+  if (uwId && s.deviceId === uwId) isFront = false;  // 超廣角裝置有時不報 facingMode
+  onUW = wantUW && s.deviceId === uwId;
+  if (wantUW && !onUW) uwBroken = true;              // 要了超廣角卻拿到別顆：之後 0.5x 不再走這條路，免得來回重開
+  $('#ph').hidden = true;
+  $('#shutter').disabled = false;
+  let labels = [];
   try {
-    if (state.stream) {
-      state.stream.getTracks().forEach(track => track.stop());
-    }
-    state.stream = await navigator.mediaDevices.getUserMedia(constraints);
-    video.srcObject = state.stream;
-    await video.play();
-    ph.hidden = true;
-    shutter.disabled = false;
-    btnSwitch.hidden = false;
-    btnMirror.hidden = false;
-    btnRot.hidden = false;
-    setZoom(state.zoom);
-    drawGuides();
-  } catch (err) {
-    ph.querySelector('.msg').textContent = '相機權限被拒絕，請允許開啟相機';
-    console.error(err);
+    const devs = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === 'videoinput');
+    camCount = devs.length;
+    labels = devs.map(d => d.label);
+    const uw = devs.find(d => /ultra\s*wide|超廣角|超广角/i.test(d.label));
+    uwId = uw ? uw.deviceId : null;
+  } catch (e) { camCount = 1; }
+  $('#btnSwitch').hidden = camCount < 2;
+  camdiag('cam', { label: track.label, res: [video.videoWidth, video.videoHeight], settings: s,
+    caps: { zoom: caps.zoom, width: caps.width, height: caps.height }, devices: labels, uw: !!uwId, onUW });
+  refreshZoomButtons();
+  setZoom(st.zoom);
+}
+function stopCamera() {
+  if (stream) stream.getTracks().forEach(t => t.stop());
+  stream = null; track = null; caps = {}; hwZoom = false; onUW = false;
+}
+function canZoom(z) {
+  // 開著超廣角裝置時，它自己的 zoom 1 其實是 0.5x，所以 1x／2x 要換回主鏡頭，不能在它上面放大
+  if (caps.zoom && z >= caps.zoom.min - 1e-6 && z <= caps.zoom.max + 1e-6 && !(onUW && z >= 1)) return 'hw';
+  if (z < 1 && uwId && !uwBroken && !isFront) return 'uw';
+  if (z >= 1) return 'digital';
+  return null;
+}
+function refreshZoomButtons() {
+  document.querySelectorAll('#zoomSeg button').forEach(b => {
+    const z = +b.dataset.z;
+    b.disabled = !!stream && !canZoom(z);
+    b.classList.toggle('on', z === st.zoom);
+  });
+}
+async function setZoom(z) {
+  st.zoom = z; save();
+  hwZoom = false;
+  const mode = canZoom(z);
+  if (stream && (mode === 'uw') !== onUW) { await startCamera({ uw: mode === 'uw' }); return; }   // 換鏡頭裝置
+  if (track && mode === 'hw') {
+    try { await track.applyConstraints({ advanced: [{ zoom: z }] }); hwZoom = true; } catch (e) { hwZoom = false; }
+  }
+  updateVideoTransform();
+  refreshZoomButtons();
+  updateHudName();
+  if (stream) camdiag('zoom', { z, mode, hwZoom, onUW, res: [video.videoWidth, video.videoHeight] });
+}
+function digitalZoom() { return hwZoom ? 1 : Math.max(1, st.zoom); }
+function updateVideoTransform() {
+  video.style.transform = `${isFront ? 'scaleX(-1) ' : ''}scale(${digitalZoom()})`;
+}
+
+/* ── 陀螺儀：算鏡頭仰俯角與手機轉角 ── */
+const sens = { ok: false, ux: 0, uy: 1, uz: 0, pitch: 0, roll: 0 };
+/* iOS 只准在「點擊」裡要陀螺儀權限；相機改成打開就自動開之後，沒有那一下點擊了，
+   所以改在第一次點畫面任何地方時補要（畫面上會提示）。Android／電腦不用要，sensState＝'na'。 */
+let sensState = (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') ? 'ask' : 'na';
+async function requestSensors() {
+  if (sensState !== 'ask') return;
+  sensState = 'asking';                                  // 一次點擊會同時觸發 touchend 與 click，只問一次
+  try { await DeviceOrientationEvent.requestPermission(); sensState = 'done'; } catch (e) { sensState = 'ask'; }
+}
+['touchend', 'click'].forEach(ev => document.addEventListener(ev, requestSensors, { passive: true }));
+const TOUCH = window.matchMedia('(pointer: coarse)').matches;
+window.addEventListener('deviceorientation', e => {
+  if (e.beta == null || e.gamma == null) return;
+  const b = e.beta * D2R, g = e.gamma * D2R;
+  // 「上方」在手機座標系的方向（由 beta/gamma 推），再低通濾波，避免 ±180° 跳動
+  const ux = -Math.sin(g) * Math.cos(b), uy = Math.sin(b), uz = Math.cos(g) * Math.cos(b);
+  const a = sens.ok ? .25 : 1;
+  sens.ux += (ux - sens.ux) * a; sens.uy += (uy - sens.uy) * a; sens.uz += (uz - sens.uz) * a;
+  const n = Math.hypot(sens.ux, sens.uy, sens.uz) || 1;
+  const X = sens.ux / n, Y = sens.uy / n, Z = sens.uz / n;
+  const so = (screen.orientation && screen.orientation.angle) || window.orientation || 0;
+  let roll = Math.atan2(-X, Y) * R2D - so;
+  roll = ((roll + 540) % 360) - 180;
+  sens.roll = roll;
+  sens.pitch = Math.asin(Math.max(-1, Math.min(1, isFront ? Z : -Z))) * R2D;
+  if (!sens.ok) { sens.ok = true; onTplChange(); }
+}, true);
+
+function isRot() {
+  const auto = sens.ok && Math.abs(sens.roll) > 120;
+  return auto !== st.manualRot;
+}
+/* 實際水平線（要陀螺儀）：從手機的仰俯角、轉角算出地平線在畫面上的位置與斜度。
+   畫在不跟著 .rot 轉的那層（#hzn），因為它本來就是用手機座標算的；倒拿時文字也會自然轉正。 */
+const hzn = $('#hzn'); let hzE = null;
+function liveHorizon(t) {
+  if (!(st.horizon && sens.ok && stream && video.videoWidth && hasHorizon(t))) { hzn.style.display = 'none'; return null; }
+  const W = 300, H = st.ratio === '9:16' ? 300 * 16 / 9 : 400;
+  hzn.style.display = '';
+  hzn.setAttribute('viewBox', `0 0 ${W} ${r2(H)}`);
+  if (!hzE) {
+    hzE = { g: el('g', {}, hzn) };
+    hzE.sh = el('line', { x1: -W, x2: 2 * W, stroke: 'rgba(0,0,0,.45)', 'stroke-width': 4.2 }, hzE.g);
+    hzE.ln = el('line', { x1: -W, x2: 2 * W, 'stroke-width': 2.2 }, hzE.g);
+    hzE.tx = el('text', { 'font-size': 11, 'font-weight': 700, 'text-anchor': 'middle', stroke: 'rgba(0,0,0,.75)', 'stroke-width': 3, 'paint-order': 'stroke' }, hzE.g);
+  }
+  // 目前畫面的垂直半視角：主鏡頭長邊 70° → 換成畫面高（扣掉 9:16 或串流比例的裁切）→ 除以倍率
+  const vw = video.videoWidth, vh = video.videoHeight, a = W / H;
+  const cropH = vw / vh > a ? vh : vw / a;
+  const tanV = TAN_HALF_1X * (cropH / Math.max(vw, vh)) / st.zoom;
+  const d = (H / 2) * Math.tan(sens.pitch * D2R) / tanV;          // 鏡頭往上 → 水平線落在畫面中間以下
+  const y = H / 2 + d;
+  // 對齊判定在「使用者看到的方向」裡做：倒拿時整個畫面轉了 180°
+  const rollU = ((sens.roll - (isRot() ? 180 : 0)) + 540) % 360 - 180;
+  const aU = -rollU;
+  const hp = horizonPoint(t, geom(t, W, H, st.mirror));
+  let ad = Math.abs(aU - hp.rot) % 180; ad = Math.min(ad, 180 - ad);
+  const dy = (H / 2 + d / Math.cos(aU * D2R)) - hzYAtCenter(hp, W);
+  const ok = Math.abs(dy) < H * .025 && ad < 2.5;
+  const c = ok ? OKC : HZN;
+  hzE.g.setAttribute('transform', `rotate(${r2(-sens.roll)} ${W / 2} ${r2(H / 2)})`);
+  for (const e of [hzE.sh, hzE.ln]) { e.setAttribute('y1', r2(y)); e.setAttribute('y2', r2(y)); }
+  hzE.ln.setAttribute('stroke', c);
+  hzE.tx.setAttribute('x', W / 2); hzE.tx.setAttribute('y', r2(y - 7)); hzE.tx.setAttribute('fill', c);
+  hzE.tx.textContent = ok ? '實際水平線 ✓ 對齊了' : '實際水平線';
+  return { ok, dy, ad };
+}
+
+/* ── 人物偵測 ──
+   MediaPipe Pose（lite 模型）在瀏覽器裡跑，畫面不上傳；第一次要下載程式庫＋約 6MB 模型（之後走快取），所以要能上網。
+   抓五個好認的點（眼、肩、髖、膝、腳）跟模板輪廓上同樣的點比：
+   兩端距離比＝人太大／太小（遠近），中心差＝人偏左右上下（手機往哪轉）。 */
+const POSE_CDN = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14';
+const POSE_MODEL = 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task';
+const pose = { state: 'off', det: null, cv: null, t: 0, P: null, seen: 0, f: null, aligned: false };
+const poseL = $('#poseL');
+async function loadPose() {
+  if (pose.state !== 'off') return;
+  pose.state = 'loading'; camdiag('pose', { state: 'loading' });
+  try {
+    const mod = await import(POSE_CDN + '/vision_bundle.mjs');
+    const files = await mod.FilesetResolver.forVisionTasks(POSE_CDN + '/wasm');
+    const make = delegate => mod.PoseLandmarker.createFromOptions(files, {
+      baseOptions: { modelAssetPath: POSE_MODEL, delegate }, runningMode: 'VIDEO', numPoses: 1 });
+    // iPhone 的網頁 GPU 路徑不穩，直接用 CPU（lite 模型一張 20–40ms 夠用）；其他先試 GPU
+    let delegate = IOS ? 'CPU' : 'GPU';
+    try { pose.det = await make(delegate); } catch (e) { delegate = 'CPU'; pose.det = await make('CPU'); }
+    pose.state = 'ready'; camdiag('pose', { state: 'ready', delegate });
+  } catch (e) {
+    pose.state = 'fail'; pose.err = String(e && e.message || e); camdiag('pose', { state: 'fail', err: pose.err });
   }
 }
-
-async function switchCamera(){
-  state.useRear = !state.useRear;
-  await startCamera();
+function detectPose(now) {
+  if (pose.state !== 'ready' || !stream || !video.videoWidth || now - pose.t < 100) return;   // 一秒 10 次就夠，省電
+  pose.t = now;
+  // 先縮成長邊 480 再丟進去：直接丟 1200 萬畫素的畫面，每一幀光搬資料就很慢
+  const vw = video.videoWidth, vh = video.videoHeight, k = 480 / Math.max(vw, vh);
+  const c = pose.cv || (pose.cv = document.createElement('canvas'));
+  const w = Math.round(vw * k), h = Math.round(vh * k);
+  if (c.width !== w || c.height !== h) { c.width = w; c.height = h; }
+  c.getContext('2d').drawImage(video, 0, 0, w, h);
+  try { const r = pose.det.detectForVideo(c, now); pose.P = (r && r.landmarks && r.landmarks[0]) || null; }
+  catch (e) { pose.P = null; }
+  if (pose.P) pose.seen = now;
 }
-
-function takeShot(){
-  if (!state.stream || video.readyState < 2) return;
-  const w = video.videoWidth;
-  const h = video.videoHeight;
-  const canvas = document.createElement('canvas');
-  const rect = vp.getBoundingClientRect();
-  const drawW = w;
-  const drawH = h;
-  const cropScale = clamp(Math.min(rect.width / drawW, rect.height / drawH), 0.2, 1.2);
-  canvas.width = Math.max(1, Math.round(drawW * cropScale));
-  canvas.height = Math.max(1, Math.round(drawH * cropScale));
-  const ctx = canvas.getContext('2d');
-  ctx.save();
-  if (state.mirror) {
-    ctx.translate(canvas.width, 0);
-    ctx.scale(-1, 1);
+// 偵測座標（整個串流畫面的 0–1）→ 取景框的 SVG 座標：扣掉 cover 裁切與數位放大，前鏡頭左右翻、倒拿上下左右翻
+function poseToOverlay(P, W, H) {
+  const vw = video.videoWidth, vh = video.videoHeight, a = W / H;
+  let cw, ch;
+  if (vw / vh > a) { ch = vh; cw = vh * a; } else { cw = vw; ch = vw / a; }
+  const dz = digitalZoom(); cw /= dz; ch /= dz;
+  const sx = (vw - cw) / 2, sy = (vh - ch) / 2, rot = isRot();
+  return P.map(p => {
+    let u = (p.x * vw - sx) / cw, v = (p.y * vh - sy) / ch;
+    if (isFront) u = 1 - u;
+    if (rot) { u = 1 - u; v = 1 - v; }
+    // ★ 只收畫面裡面的點：腳在框外時，模型照樣在框邊「猜」一個腳的位置而且信心不低（實測 2026-11-18），
+    //   拿來算大小會把「人太大」誤判成「對準了」
+    return { x: u * W, y: v * H, ok: (p.visibility == null || p.visibility > .5) && u > .01 && u < .99 && v > .01 && v < .99 };
+  });
+}
+// 用腳踝不用腳底：全身照要腳尖貼底，腳底剛好在框邊（會被上面那條規則濾掉），腳踝還在框裡
+const ANCH = ['eye', 'shoulder', 'hip', 'knee', 'ankle'];
+/* 偵測點在「頭頂到腳尖」裡的位置——不能直接用輪廓的 LM：模型的「髖」是髖關節（比褲襠高），
+   腳踝到腳尖在照片裡因為俯視透視還會再拉長一段。
+   推導：人體測量（眼 6.5%、肩 18%、髖關節 48%、膝 72%、踝 96%）＋胸口高度拍全身時腳掌的透視約 4–5%。
+   實測 2026-11-18 一張全身照（n＝1，厚底靴）：眼 .079、肩 .19、髖 .447、膝 .70、踝 .87——取兩者之間。
+   ★ 只有一張照片的依據，實拍後要用手機回報的 sc／dx／dy 再校。 */
+const POSE_FRAC = {
+  stand:  { eye: .07, shoulder: .185, hip: .47, knee: .715, ankle: .91 },
+  crouch: { eye: .095, shoulder: .25, knee: .48, ankle: .9 },
+  sit:    { eye: .085, shoulder: .225, hip: .58, knee: .66, ankle: .93 },
+};
+function anchorsOf(Q) {
+  const mid = (i, j) => Q[i].ok && Q[j].ok ? { x: (Q[i].x + Q[j].x) / 2, y: (Q[i].y + Q[j].y) / 2 } : null;
+  return { eye: mid(2, 5), shoulder: mid(11, 12), hip: mid(23, 24), knee: mid(25, 26), ankle: mid(27, 28) };
+}
+// 輪廓上「從頭頂算起 f 的那一點」在畫面上的位置（跟 horizonPoint 同一個轉法，破水平時一起歪）
+function expectAt(g, f) {
+  const a = g.rot * D2R, y0 = f * 100 - 50;
+  return { x: g.cx - g.k * y0 * Math.sin(a), y: g.top + g.k * (50 + y0 * Math.cos(a)) };
+}
+function poseCheck(t, W, H) {
+  const A = anchorsOf(poseToOverlay(pose.P, W, H)), L = POSE_FRAC[t.pose], g = geom(t, W, H, st.mirror);
+  const names = ANCH.filter(n => L[n] != null && A[n]);
+  const D = names.map(n => A[n]);
+  if (names.length < 2) return { D, msg: '只看到一小部分的人，請對方整個進畫面' };
+  const E = names.map(n => expectAt(g, L[n])), n1 = names.length - 1;
+  const dE = Math.hypot(E[n1].x - E[0].x, E[n1].y - E[0].y);
+  if (dE < H * .06) return { D, msg: '人太小或太遠，看不清楚——走近一點' };
+  const sc = Math.hypot(D[n1].x - D[0].x, D[n1].y - D[0].y) / dE;
+  const avg = (arr, k) => arr.reduce((s, p) => s + p[k], 0) / arr.length;
+  return { D, sc, dx: (avg(D, 'x') - avg(E, 'x')) / W, dy: (avg(D, 'y') - avg(E, 'y')) / H };
+}
+function drawPoseLayer(D, W, H, good) {
+  poseL.textContent = '';
+  if (!D || !D.length) return;
+  poseL.setAttribute('viewBox', `0 0 ${W} ${r2(H)}`);
+  el('polyline', { points: D.map(p => `${r2(p.x)},${r2(p.y)}`).join(' '), fill: 'none', stroke: 'rgba(255,255,255,.75)', 'stroke-width': 1.6, 'stroke-dasharray': '2 3' }, poseL);
+  for (const p of D) el('circle', { cx: r2(p.x), cy: r2(p.y), r: 3.6, fill: good ? OKC : '#fff', stroke: 'rgba(0,0,0,.6)', 'stroke-width': 1 }, poseL);
+}
+function setPosePill(text, cls) { const p = $('#hudPose'); p.textContent = text; p.className = 'hpill ' + (cls || ''); p.hidden = !text; }
+function clearPose() { poseL.textContent = ''; setPosePill(''); pose.f = null; pose.aligned = false; }
+// 回傳：人有沒有對進輪廓（只看人；角度另外判）
+function poseStep(t, now, pitchOk) {
+  if (t.kind !== 'person' || t.noPose || !st.pose || !stream) { clearPose(); return false; }
+  if (pose.state === 'off') loadPose();
+  if (pose.state === 'loading') { poseL.textContent = ''; setPosePill('人物偵測載入中…（第一次要下載，約 10 秒）'); return false; }
+  if (pose.state === 'fail') { poseL.textContent = ''; setPosePill('人物偵測載入失敗（要能上網）', 'bad'); return false; }
+  detectPose(now);
+  const W = 300, H = st.ratio === '9:16' ? 300 * 16 / 9 : 400;
+  if (!pose.P || now - pose.seen > 1200) { clearPose(); setPosePill('找不到人：請對方進到框裡', 'bad'); return false; }
+  const r = poseCheck(t, W, H);
+  if (r.msg) { pose.f = null; pose.aligned = false; drawPoseLayer(r.D, W, H, false); setPosePill(r.msg, 'bad'); return false; }
+  // 平滑一下再判，免得提示在兩句之間跳；已經對準時放寬 1.4 倍才算跑掉（不然邊界上一直閃）
+  const a = .4, f = pose.f;
+  pose.f = f ? { sc: f.sc + (r.sc - f.sc) * a, dx: f.dx + (r.dx - f.dx) * a, dy: f.dy + (r.dy - f.dy) * a } : { sc: r.sc, dx: r.dx, dy: r.dy };
+  const s = pose.f, k = pose.aligned ? 1.4 : 1;
+  const hintOf = (v, k) => {
+    if (v.sc < 1 - .1 * k) return '人太小 → 走近一點';
+    if (v.sc > 1 + .1 * k) return '人太大 → 往後退一點';
+    if (Math.abs(v.dx) > .05 * k) return isFront ? (v.dx > 0 ? '往左站一點' : '往右站一點') : (v.dx > 0 ? '人偏右 → 手機往右轉一點' : '人偏左 → 手機往左轉一點');
+    if (Math.abs(v.dy) > .04 * k) return v.dy > 0 ? '人偏下 → 鏡頭往下壓一點' : '人偏上 → 鏡頭往上抬一點';
+    return '';
+  };
+  // ★ 平滑值從「太大」滑到「太小」途中會短暫穿過合格區（實測 2026-11-18 閃過一次假的 ✓），所以這一幀的原始值也要大致合格
+  let m = hintOf(s, k) || hintOf(r, 1.6);
+  pose.aligned = !m;
+  if (m !== pose.lastMsg) {                                      // 提示換了才回報（給實拍後校比例用）
+    pose.lastMsg = m;
+    camdiag('pose_hint', { tpl: t.id, m: m || 'ok', sc: r2(s.sc), dx: r2(s.dx), dy: r2(s.dy), raw: { sc: r2(r.sc), dx: r2(r.dx), dy: r2(r.dy) } });
   }
-  ctx.drawImage(video, 0, 0, drawW, drawH, 0, 0, canvas.width, canvas.height);
-  ctx.restore();
-
-  const stamp = Date.now();
-  canvas.toBlob(blob => {
-    if (!blob) return;
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `portrait_${stamp}.jpg`;
-    const img = document.createElement('img');
-    img.src = url;
-    img.height = 84;
-    img.alt = '拍照';
-    a.appendChild(img);
-    shots.prepend(a);
-    setTimeout(() => URL.revokeObjectURL(url), 60000);
-  }, 'image/jpeg', 0.92);
-
-  flash.classList.add('on');
-  setTimeout(() => flash.classList.remove('on'), 180);
+  drawPoseLayer(r.D, W, H, pose.aligned);
+  if (m) setPosePill(m, 'bad');
+  else if (pitchOk === false) setPosePill('✓ 人對準了・角度再調一下（看右上角）', 'bad');
+  else setPosePill(st.auto ? '✓ 對準了・自動拍' : '✓ 人對準了', 'ok');
+  return pose.aligned;
 }
 
-function bindEvents(){
-  btnStart.addEventListener('click', startCamera);
-  btnGrid.addEventListener('click', () => {
-    state.grid = !state.grid;
-    btnGrid.setAttribute('aria-pressed', String(state.grid));
-    drawGuides();
-  });
-  btnFig.addEventListener('click', () => {
-    state.figure = !state.figure;
-    btnFig.setAttribute('aria-pressed', String(state.figure));
-    drawGuides();
-  });
-  btnLabels.addEventListener('click', () => {
-    state.labels = !state.labels;
-    btnLabels.setAttribute('aria-pressed', String(state.labels));
-    drawGuides();
-  });
-  btnHzn.addEventListener('click', () => {
-    state.horizon = !state.horizon;
-    btnHzn.setAttribute('aria-pressed', String(state.horizon));
-    drawGuides();
-  });
-  btnRatio.addEventListener('click', () => {
-    state.ratio = state.ratio === '3:4' ? '9:16' : '3:4';
-    applyRatioMode();
-  });
-  btnMirror.addEventListener('click', () => {
-    state.mirror = !state.mirror;
-    btnMirror.setAttribute('aria-pressed', String(state.mirror));
-    setZoom(state.zoom);
-  });
-  btnRot.addEventListener('click', () => {
-    state.rot = !state.rot;
-    vp.classList.toggle('rot', state.rot);
-    btnRot.setAttribute('aria-pressed', String(state.rot));
-  });
-  btnSwitch.addEventListener('click', switchCamera);
-  shutter.addEventListener('click', takeShot);
-  btnTimer.addEventListener('click', () => {
-    state.timer = 3;
-    btnTimer.setAttribute('aria-pressed', 'true');
-    count.textContent = '3';
-    count.style.display = 'flex';
-    const t = setInterval(() => {
-      state.timer -= 1;
-      count.textContent = String(Math.max(0, state.timer));
-      if (state.timer <= 0) {
-        clearInterval(t);
-        setTimeout(() => { count.textContent = ''; count.style.display = 'none'; }, 300);
-        takeShot();
-        btnTimer.setAttribute('aria-pressed', 'false');
-      }
-    }, 1000);
-  });
-  zoomSeg.addEventListener('click', (e) => {
-    const btn = e.target.closest('button[data-z]');
-    if (!btn) return;
-    setZoom(Number(btn.dataset.z));
-  });
-  document.addEventListener('keydown', (e) => {
-    if (e.code === 'Space') {
-      e.preventDefault();
-      takeShot();
-    }
-    if (e.key >= '0' && e.key <= '9') {
-      const n = Number(e.key);
-      if (n >= 1 && n <= 9) setSelectedTemplate(Math.min(n - 1, templates.length - 1));
-      if (n === 0) setSelectedTemplate(0);
-    }
-  });
+/* 自動拍：構圖對了撐 0.7 秒就拍；拍完要先「跑掉」一次才會再拍，免得站著不動一直連拍 */
+const autoS = { since: 0, armed: true };
+function autoStep(ready, now) {
+  if (!ready) { autoS.since = 0; autoS.armed = true; return; }
+  if (!st.auto || !autoS.armed || counting) { autoS.since = 0; return; }
+  if (!autoS.since) autoS.since = now;
+  if (now - autoS.since > 700) { shoot(); autoS.armed = false; autoS.since = 0; }
 }
 
-function init(){
-  renderTemplateCards();
-  renderDetail();
-  setSelectedTemplate(0);
-  applyRatioMode();
-  bindEvents();
-  drawGuides();
-  const obs = new ResizeObserver(() => drawGuides());
-  obs.observe(vp);
-  setZoom(1);
+function hudLoop(now) {
+  now = now || performance.now();
+  const t = cur();
+  vp.classList.toggle('rot', isRot());
+  const hz = liveHorizon(t);
+  const hzShown = st.horizon && hasHorizon(t);
+  const hp = $('#hudPitch'), lv = $('#level'), bn = $('#hudBanner');
+  let pitchOk = null, rollOk = null, banner = '';
+  if (sens.ok && stream) {
+    const p = sens.pitch, [lo, hi] = t.pitch;
+    const dirTxt = p < -85 ? '正對下方' : Math.abs(p) < .5 ? '水平 0°' : (p > 0 ? `往上 ${Math.round(p)}°` : `往下 ${Math.round(-p)}°`);
+    let tip = '✓', cls = 'ok';
+    if (p < lo) { tip = '→ 往上抬一點'; cls = 'bad'; }
+    else if (p > hi) { tip = t.pitch[0] <= -90 ? '→ 手機再放平一點' : '→ 往下壓一點'; cls = 'bad'; }
+    pitchOk = cls === 'ok';
+    hp.textContent = `鏡頭${dirTxt} ${tip}`;
+    hp.className = 'hpill ' + cls; hp.hidden = false;
+
+    if (t.roll != null || t.flip) {                                // 俯拍（roll null）手機平躺，轉角沒有意義
+      const target = t.flip ? 180 : t.roll * (st.mirror ? -1 : 1);
+      $('#lvT').style.transform = `rotate(${-target}deg)`;
+      $('#lvH').style.transform = `rotate(${-sens.roll}deg)`;
+      let diff = Math.abs(sens.roll - target) % 180; diff = Math.min(diff, 180 - diff);
+      rollOk = diff < 2.5;
+      lv.classList.toggle('ok', rollOk);
+      lv.hidden = hzShown;                                         // 有背景水平線時由實際水平線取代小水平儀
+      if (t.flip && Math.abs(sens.roll) < 120) banner = '把手機轉 180° 倒過來拿（鏡頭到下面）';
+      else if (t.roll && !t.flip && diff > 6) banner = `手機${target < 0 ? '往左' : '往右'}歪 10°，${hzShown ? '讓藍色實線跟虛線一樣斜' : '讓中間短線對齊兩邊'}`;
+    } else lv.hidden = true;
+  } else {
+    hp.hidden = true; lv.hidden = true;
+    // 只對觸控裝置提示：桌機 Chrome 也有 requestPermission（實測 2026-11-18），但電腦沒有陀螺儀，提示只會誤導
+    if (stream && sensState === 'ask' && TOUCH) banner = '點一下畫面，打開實際水平線和角度提示';
+  }
+  if (!banner && stream && t.lens === .5 && st.zoom === .5 && !hwZoom && !onUW) banner = '這支手機的網頁叫不出 0.5x：用內建相機切 0.5x，照這個框拍';
+  bn.textContent = banner; bn.hidden = !banner;
+
+  // 構圖對了沒：人像看人有沒有對進輪廓（有陀螺儀再加角度）；美食、風景看角度（＋水平線）
+  let ready = false;
+  // （Y2K 這種變形輪廓 noPose：人物偵測比不準，跟美食風景一樣看角度）
+  if (t.kind === 'person' && !t.noPose) ready = poseStep(t, now, pitchOk) && pitchOk !== false;
+  else { clearPose(); ready = !!(stream && pitchOk && (t.noPose ? rollOk !== false : (hz ? hz.ok : rollOk !== false))); }
+  vp.classList.toggle('aligned', ready);
+  $('#shutter').classList.toggle('ready', ready);
+  autoStep(ready, now);
+  requestAnimationFrame(hudLoop);
 }
 
-init();
+function updateHudName() {
+  const t = cur();
+  const z = st.zoom === .5 ? '.5x' : st.zoom + 'x';
+  const dz = stream && !hwZoom && st.zoom > 1 ? '（數位）' : '';
+  $('#hudName').textContent = `${t.name}・${z}${dz}`;
+  $('#hudMn').textContent = t.mn;
+}
+
+/* ── 拍照 ── */
+function shoot() {
+  if (!stream || !video.videoWidth) return;
+  const vw = video.videoWidth, vh = video.videoHeight;
+  const a = st.ratio === '9:16' ? 9 / 16 : 3 / 4;
+  let cw, ch;
+  if (vw / vh > a) { ch = vh; cw = vh * a; } else { cw = vw; ch = vw / a; }   // 跟畫面上 object-fit: cover 裁同一塊
+  const dz = digitalZoom(); cw /= dz; ch /= dz;
+  const sx = (vw - cw) / 2, sy = (vh - ch) / 2;
+  const c = document.createElement('canvas');
+  c.width = Math.round(cw); c.height = Math.round(ch);
+  const g = c.getContext('2d');
+  if (isRot()) { g.translate(c.width, c.height); g.rotate(Math.PI); }
+  if (isFront) { g.translate(c.width, 0); g.scale(-1, 1); }
+  g.drawImage(video, sx, sy, cw, ch, 0, 0, c.width, c.height);
+  const f = $('#flash'); f.classList.add('on'); requestAnimationFrame(() => requestAnimationFrame(() => f.classList.remove('on')));
+  // 縮圖（照片匣顯示用）：長邊 360，原圖只在存／下載時才從儲存區拿出來
+  const k = 360 / Math.max(c.width, c.height);
+  const tc = document.createElement('canvas');
+  tc.width = Math.round(c.width * k); tc.height = Math.round(c.height * k);
+  tc.getContext('2d').drawImage(c, 0, 0, tc.width, tc.height);
+  const d = new Date(), p = n => String(n).padStart(2, '0');
+  const name = `構圖_${cur().name}_${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}.jpg`;
+  const W0 = c.width, H0 = c.height;
+  c.toBlob(b => {
+    // ★ 1200 萬畫素的畫布一張約 48MB；iPhone 對畫布記憶體有總量上限，用完立刻把它縮成 0 才會馬上還回去
+    c.width = c.height = 0;
+    if (!b) { camdiag('shot_fail', { w: W0, h: H0 }); toast('這張沒拍成功（手機記憶體不夠），再按一次'); return; }
+    tc.toBlob(tb => {
+      tc.width = tc.height = 0;
+      camdiag('shot', { w: W0, h: H0, kb: Math.round(b.size / 1024) });
+      albumAdd(b, tb || b, { name, t: Date.now(), w: W0, h: H0 });
+    }, 'image/jpeg', .75);
+  }, 'image/jpeg', .92);
+}
+
+/* ── 照片匣：最多 50 張，存在這支手機瀏覽器的 IndexedDB ──
+   重新整理、切去別的 App 再回來都還在（iPhone 常在背景把分頁重載，只放記憶體的話照片會整批不見）。
+   滿 50 張自動清掉最舊的；清除瀏覽資料也會一起不見，所以畫面上一直提醒「記得存到相簿」。
+   原圖一張約 3.5MB（實測 2026-11-18：3024×4032），50 張約 180MB——只有縮圖放記憶體，原圖要用時才讀。 */
+const MAX_PHOTOS = 50;
+const album = { db: null, items: [], sel: new Set(), files: new Map(), mem: new Map() };   // items：新→舊
+/* ★ 2026-11-18 iPhone 版 Chrome：點照片（當時會順便從 IndexedDB 讀原圖）之後整頁重新載入——判斷是分頁當掉。
+   所以 (1) 存進 IndexedDB 的一律是 ArrayBuffer 不是 Blob（WKWebView 裡 Blob 存取是比較少人走的路），
+   (2) 點照片只做選取，原圖等按「存到相簿／下載」才讀。舊版存的 Blob 照樣讀得回來。 */
+const toBuf = b => b.arrayBuffer ? b.arrayBuffer() : new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = () => rej(r.error); r.readAsArrayBuffer(b); });
+const asBlob = v => v instanceof Blob ? v : new Blob([v], { type: 'image/jpeg' });
+const idbReq = r => new Promise((res, rej) => { r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
+const txDone = T => new Promise((res, rej) => { T.oncomplete = () => res(); T.onerror = () => rej(T.error); T.onabort = () => rej(T.error); });
+function idbOpen() {
+  return new Promise((res, rej) => {
+    if (!window.indexedDB) { rej(new Error('no indexedDB')); return; }
+    const r = indexedDB.open('portraitCamPhotos', 1);
+    r.onupgradeneeded = () => { const db = r.result; db.createObjectStore('meta', { keyPath: 'id' }); db.createObjectStore('full'); };
+    r.onsuccess = () => res(r.result);
+    r.onerror = () => rej(r.error);
+  });
+}
+async function albumInit() {
+  try {
+    album.db = await idbOpen();
+    const metas = await idbReq(album.db.transaction('meta').objectStore('meta').getAll());
+    metas.sort((a, b) => b.t - a.t);
+    album.items = metas.map(m => Object.assign({}, m, { thumb: null, thumbUrl: URL.createObjectURL(asBlob(m.thumb)) }));
+    camdiag('album', { idb: true, n: album.items.length });
+  } catch (e) {
+    album.db = null;                                             // 無痕模式等存不了：退回只放記憶體（重新整理就沒了）
+    camdiag('album', { idb: false, err: String(e && e.message || e) });
+  }
+  renderAlbum();
+}
+async function albumAdd(blob, thumb, meta) {
+  const id = meta.t + '-' + Math.random().toString(36).slice(2, 7);
+  let stored = false;
+  if (album.db) {
+    try {
+      const [fullBuf, thumbBuf] = await Promise.all([toBuf(blob), toBuf(thumb)]);
+      const T = album.db.transaction(['meta', 'full'], 'readwrite');
+      T.objectStore('meta').put(Object.assign({ id, thumb: thumbBuf, saved: false }, meta));
+      T.objectStore('full').put(fullBuf, id);
+      await txDone(T); stored = true;
+      camdiag('album_put', { ok: true, kb: Math.round(fullBuf.byteLength / 1024) });
+    } catch (e) { camdiag('album_put', { ok: false, err: String(e && (e.name + ' ' + e.message)) }); }
+  }
+  if (!stored) album.mem.set(id, blob);                          // 空間不夠或沒有 IndexedDB：先放記憶體
+  album.items.unshift(Object.assign({ id, saved: false }, meta, { thumbUrl: URL.createObjectURL(thumb) }));
+  let dropped = 0;
+  if (album.items.length > MAX_PHOTOS) {
+    const old = album.items.slice(MAX_PHOTOS).map(x => x.id);
+    dropped = old.length;
+    await albumRemove(old);
+  }
+  renderAlbum(dropped);
+}
+async function albumRemove(ids) {
+  for (const id of ids) {
+    const i = album.items.findIndex(x => x.id === id);
+    if (i >= 0) { URL.revokeObjectURL(album.items[i].thumbUrl); album.items.splice(i, 1); }
+    album.sel.delete(id); album.files.delete(id); album.mem.delete(id);
+  }
+  if (album.db) {
+    try {
+      const T = album.db.transaction(['meta', 'full'], 'readwrite');
+      for (const id of ids) { T.objectStore('meta').delete(id); T.objectStore('full').delete(id); }
+      await txDone(T);
+    } catch (e) {}
+  }
+}
+// 原圖 → File（按「存到相簿／下載」時才讀）
+async function albumFile(id) {
+  if (album.files.has(id)) return album.files.get(id);
+  const it = album.items.find(x => x.id === id);
+  if (!it) return null;
+  let v = album.mem.get(id);
+  if (!v && album.db) { try { v = await idbReq(album.db.transaction('full').objectStore('full').get(id)); } catch (e) { camdiag('file_read', { ok: false, err: String(e && e.name) }); } }
+  if (!v) return null;
+  const f = new File([asBlob(v)], it.name, { type: 'image/jpeg' });
+  if (album.sel.has(id)) album.files.set(id, f);                 // 只留選取中的，免得 50 張原圖都卡在記憶體
+  return f;
+}
+async function albumFiles(ids) {
+  camdiag('file_read_start', { n: ids.length });                // 先送出：要是讀到一半當掉，至少知道是卡在這一步
+  const t0 = performance.now(), out = [];
+  for (const id of ids) { const f = await albumFile(id); if (f) out.push(f); }
+  camdiag('file_read', { ok: out.length === ids.length, n: out.length, ms: Math.round(performance.now() - t0) });
+  return out;
+}
+async function markSaved(ids) {
+  for (const id of ids) { const it = album.items.find(x => x.id === id); if (it) it.saved = true; }
+  if (album.db) {
+    try {
+      const T = album.db.transaction('meta', 'readwrite'), S = T.objectStore('meta');
+      for (const id of ids) { const m = await idbReq(S.get(id)); if (m) { m.saved = true; S.put(m); } }
+      await txDone(T);
+    } catch (e) {}
+  }
+}
+let toastTimer = 0;
+function toast(msg) {
+  let el2 = $('#toast');
+  if (!el2) { el2 = document.createElement('div'); el2.id = 'toast'; el2.className = 'toast'; document.body.appendChild(el2); }
+  el2.textContent = msg; el2.hidden = false;
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => { el2.hidden = true; }, 3200);
+}
+function renderAlbum(dropped) {
+  const n = album.items.length, k = album.sel.size, canShare = IOS && !!navigator.share;
+  const box = $('#shots'); box.textContent = '';
+  for (const it of album.items) {
+    const b = document.createElement('button');
+    b.className = 'ph' + (album.sel.has(it.id) ? ' sel' : '');
+    b.dataset.id = it.id;
+    b.innerHTML = `<img alt="${it.name}"><span class="ck"></span>${it.saved ? '<span class="sv">已存</span>' : ''}`;
+    b.querySelector('img').src = it.thumbUrl;
+    b.addEventListener('click', () => toggleSel(it.id));
+    box.appendChild(b);
+  }
+  const newest = album.items[0];
+  const mp = newest ? Math.round(newest.w * newest.h / 1e5) * 10 : 0;          // 以「萬畫素」計
+  $('#trayTitle').textContent = `照片 ${n}／${MAX_PHOTOS}${mp ? `・每張約 ${mp} 萬畫素` : ''}`;
+  const tip = $('#trayTip');
+  tip.classList.toggle('warn', !!dropped || n >= MAX_PHOTOS - 5);
+  if (dropped) tip.textContent = `已滿 ${MAX_PHOTOS} 張，最舊的 ${dropped} 張已經清掉了。`;
+  else if (!n) tip.textContent = '還沒有照片。';
+  else if (canShare) tip.innerHTML = '點照片選取 → 按「存到相簿」→ 在分享選單選「<b>儲存影像</b>」。'
+    + (CRIOS ? '找不到就往下滑；還是沒有，改按「下載」（存進「檔案」App），或改用 Safari 開這個網址。' : '')
+    + `最多留 ${MAX_PHOTOS} 張，滿了會自動清掉最舊的。`;
+  else tip.textContent = `點照片選取 → 按「下載」。最多留 ${MAX_PHOTOS} 張，滿了會自動清掉最舊的。`;
+  if (n && !dropped && !album.db) tip.textContent += '（這個瀏覽器存不了，重新整理照片就會不見）';
+  const bs = $('#btnSave');
+  bs.hidden = !canShare;
+  bs.disabled = !k || saving;
+  bs.textContent = saving ? '準備中…' : k ? `存到相簿（${k}）` : '存到相簿';
+  $('#btnDl').disabled = !k; $('#btnDl').textContent = k ? `下載（${k}）` : '下載';
+  $('#btnDel').disabled = !k; $('#btnDel').textContent = k ? `刪除（${k}）` : '刪除';
+  $('#btnSelAll').textContent = n && k === n ? '取消全選' : '全選';
+  $('#btnSelAll').hidden = !n;
+  $('#tray').classList.toggle('empty', !n);
+  const last = $('#lastShot');
+  last.hidden = !n;
+  if (newest) { last.querySelector('img').src = newest.thumbUrl; $('#lastN').textContent = n; }
+}
+function toggleSel(id, on, quiet) {
+  if (!quiet) camdiag('tap', { id });                            // 一按就先回報：之後當掉也知道「點到了」
+  const want = on == null ? !album.sel.has(id) : on;
+  if (want) album.sel.add(id);
+  else { album.sel.delete(id); album.files.delete(id); }
+  if (!quiet) { renderAlbum(); camdiag('sel', { n: album.sel.size }); }
+}
+$('#btnSelAll').addEventListener('click', () => {
+  const all = album.sel.size === album.items.length;
+  for (const it of album.items) toggleSel(it.id, !all, true);
+  renderAlbum();
+});
+/* 存到相簿：原圖已經讀好就當場叫分享選單；還沒讀就先讀再叫。
+   iPhone 只准在「按下去的當下」叫分享選單，讀太久會被擋（NotAllowedError）——那時原圖已經讀好了，請他再按一次就行 */
+let saving = false;
+$('#btnSave').addEventListener('click', async () => {
+  if (saving) return;
+  const ids = [...album.sel];
+  if (!ids.length) return;
+  let files = ids.map(id => album.files.get(id)).filter(Boolean);
+  if (files.length < ids.length) {
+    saving = true; $('#btnSave').textContent = '準備中…';
+    try { files = await albumFiles(ids); } finally { saving = false; renderAlbum(); }
+    if (files.length < ids.length) { toast('有照片讀不出來，可能已經被清掉了'); return; }
+  }
+  savePhoto(files, ids);
+});
+$('#btnDl').addEventListener('click', async () => {
+  const ids = [...album.sel];
+  const files = await albumFiles(ids);
+  for (const f of files) {
+    const u = URL.createObjectURL(f), a = document.createElement('a');
+    a.href = u; a.download = f.name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(u), 60000);
+    await new Promise(r => setTimeout(r, 400));                  // 連續下載太快，瀏覽器會只留第一個
+  }
+  camdiag('download', { n: ids.length });
+});
+$('#btnDel').addEventListener('click', async () => {
+  const ids = [...album.sel];
+  const unsaved = ids.filter(id => !(album.items.find(x => x.id === id) || {}).saved).length;
+  if (!confirm(`刪除這 ${ids.length} 張？${unsaved ? `其中 ${unsaved} 張還沒存到相簿，刪了就救不回來。` : ''}`)) return;
+  await albumRemove(ids);
+  renderAlbum();
+});
+function useShare(files) {
+  if (!IOS || !navigator.share || !navigator.canShare) return false;
+  try { return navigator.canShare({ files }); } catch (e) { return false; }
+}
+/* ★ 存照片（2026-11-18 實測 iPhone 版 Chrome：長按照片→「儲存圖片」跳「沒有網際網路連線」，手機明明有網路）。
+   照片是頁面裡產生的 blob，Chrome 的「儲存圖片」會重新上網抓那個網址，抓不到就報沒網路。
+   所以 iPhone 改成點一下→系統分享選單→「儲存影像」（不經網路）；Chrome 上把長按選單關掉，免得又按到壞的那個。
+   分享選單叫不出來才退到「全螢幕顯示＋教長按」，那條再不行就只能請他改用 Safari。 */
+function savePhoto(files, ids) {
+  const can = useShare(files);
+  camdiag('save_try', { n: files.length, share: !!navigator.share, canShare: can, crios: CRIOS });
+  if (!can) { showSaveHelp(files); return; }
+  navigator.share({ files })
+    .then(() => {
+      camdiag('save_result', { ok: true, n: files.length });
+      // 分享選單關掉時不會說選了哪一項（存相簿、AirDrop…），只知道「有做了什麼」，所以標「已存」而且清掉選取
+      markSaved(ids).then(() => { album.sel.clear(); album.files.clear(); renderAlbum(); });
+    })
+    .catch(e => {
+      camdiag('save_result', { ok: false, name: e && e.name, msg: e && e.message });
+      if (e && e.name === 'AbortError') return;                 // 按取消，不用跳說明
+      if (e && e.name === 'NotAllowedError') { toast('照片準備好了，再按一次「存到相簿」'); return; }   // 讀檔太久，過了「按下去的當下」
+      showSaveHelp(files);
+    });
+}
+let helpUrl = '';
+function showSaveHelp(files) {
+  if (helpUrl) { URL.revokeObjectURL(helpUrl); helpUrl = ''; }
+  const one = files.length === 1;
+  if (one) helpUrl = URL.createObjectURL(files[0]);
+  $('#saveImg').hidden = !one;
+  if (one) $('#saveImg').src = helpUrl;
+  $('#saveTxt').innerHTML = CRIOS
+    ? '這支手機叫不出分享選單。改按「下載」存進「檔案」App；或長按照片試試「加入照片」——如果出現「沒有網際網路連線」，是 <b>iPhone 版 Chrome 存不了網頁裡拍的照片</b>，請改用 <b>Safari</b> 開這個網址。'
+    : one ? '長按上面的照片 →「加入照片」就會存進相簿。' : '這個瀏覽器叫不出分享選單，請改按「下載」。';
+  $('#saveHelp').hidden = false;
+}
+let counting = false;
+function shutter() {
+  if (!stream || counting) return;
+  if (!st.timer) { shoot(); return; }
+  counting = true;
+  let n = 3; const c = $('#count');
+  const tick = () => {
+    if (n === 0) { c.textContent = ''; counting = false; shoot(); return; }
+    c.textContent = n--; setTimeout(tick, 1000);
+  };
+  tick();
+}
+
+/* ── 切換 ── */
+/* 手機版：取景框照「剩下的空間」縮放，3:4 或 9:16 都整個放得下、不用捲。
+   電腦版交回 CSS。舊 iOS（14 以前）不認 aspect-ratio，所以高也一起給。 */
+const vpwrap = $('#vpwrap');
+function fitViewport() {
+  if (!MQ.matches) { vp.style.width = ''; vp.style.height = ''; return; }
+  const r = vpwrap.getBoundingClientRect();
+  const a = st.ratio === '9:16' ? 9 / 16 : 3 / 4;
+  const w = Math.floor(Math.min(r.width, r.height * a));
+  if (w <= 0) return;
+  vp.style.width = w + 'px'; vp.style.height = Math.floor(w / a) + 'px';
+}
+if (window.ResizeObserver) new ResizeObserver(fitViewport).observe(vpwrap);
+window.addEventListener('resize', fitViewport);
+function renderOverlay() {
+  vp.dataset.ratio = st.ratio;
+  fitViewport();
+  drawOverlay($('#overlay'), cur(), { ratio: st.ratio, grid: st.grid, fig: st.fig, labels: st.labels, horizon: st.horizon, mirror: st.mirror });
+}
+function onTplChange() {
+  const t = cur(), isP = t.kind === 'person';
+  $('#btnMirror').hidden = !t.mirrorable;
+  $('#btnRot').hidden = !t.flip;
+  $('#btnPose').hidden = !isP || !!t.noPose;                     // 人物偵測只對人像有用（變形輪廓的不用）
+  $('#btnFig').textContent = isP ? '人物輪廓' : '主體輪廓';
+  $('#btnHzn').hidden = !hasHorizon(t);                         // 美食往下拍，看不到水平線
+  renderOverlay(); renderDetail(); updateHudName();
+}
+function selectTpl(i, userPick) {
+  const t = TPLS[i];
+  st.tpl = t.id;
+  st.lastByCat = Object.assign({}, st.lastByCat, { [t.cat]: t.id });
+  if (!t.mirrorable) st.mirror = false;
+  if (!t.flip) st.manualRot = false;
+  let z = t.lens;
+  if (stream && !canZoom(z)) z = 1;
+  document.querySelectorAll('.tpl-card,.mini').forEach(c => c.classList.toggle('on', +c.dataset.i === i));
+  document.querySelectorAll('.mini').forEach(m => { m.hidden = TPLS[+m.dataset.i].cat !== t.cat; });
+  document.querySelectorAll('#cats button').forEach(b => b.classList.toggle('on', b.dataset.cat === t.cat));
+  pose.f = null; pose.aligned = false; autoS.since = 0;
+  syncToggles();
+  setZoom(z);
+  onTplChange();
+  save();
+  const mini = document.querySelector(`.mini[data-i="${i}"]`);
+  if (mini && MQ.matches) mini.scrollIntoView({ inline: 'center', block: 'nearest', behavior: userPick ? 'smooth' : 'auto' });
+}
+function syncToggles() {
+  $('#btnGrid').setAttribute('aria-pressed', st.grid);
+  $('#btnFig').setAttribute('aria-pressed', st.fig);
+  $('#btnLabels').setAttribute('aria-pressed', st.labels);
+  $('#btnHzn').setAttribute('aria-pressed', st.horizon);
+  $('#btnRatio').setAttribute('aria-pressed', st.ratio === '9:16');
+  $('#btnMirror').setAttribute('aria-pressed', st.mirror);
+  $('#btnRot').setAttribute('aria-pressed', st.manualRot);
+  $('#btnTimer').setAttribute('aria-pressed', st.timer);
+  $('#btnPose').setAttribute('aria-pressed', st.pose);
+  $('#btnAuto').setAttribute('aria-pressed', st.auto);
+}
+const toggle = (key, after) => () => { st[key] = !st[key]; syncToggles(); save(); (after || renderOverlay)(); };
+$('#btnGrid').addEventListener('click', toggle('grid'));
+$('#btnFig').addEventListener('click', toggle('fig'));
+$('#btnLabels').addEventListener('click', toggle('labels'));
+$('#btnHzn').addEventListener('click', toggle('horizon'));
+$('#btnMirror').addEventListener('click', toggle('mirror', onTplChange));
+$('#btnRot').addEventListener('click', toggle('manualRot', () => {}));
+$('#btnTimer').addEventListener('click', toggle('timer', () => {}));
+$('#btnPose').addEventListener('click', toggle('pose', () => {}));
+$('#btnAuto').addEventListener('click', toggle('auto', () => {}));
+$('#btnRatio').addEventListener('click', () => { st.ratio = st.ratio === '9:16' ? '3:4' : '9:16'; syncToggles(); save(); renderOverlay(); });
+$('#btnStart').addEventListener('click', startCamera);
+$('#btnSwitch').addEventListener('click', () => { facing = facing === 'user' ? 'environment' : 'user'; startCamera(); });
+$('#shutter').addEventListener('click', shutter);
+// 手機版的兩個滑上來的面板：「怎麼拍」（說明）與照片匣；點暗處或 ✕ 收起
+const closePanels = () => document.body.classList.remove('sheet', 'tray');
+$('#btnHow').addEventListener('click', () => { document.body.classList.add('sheet'); $('#sheet').scrollTop = 0; });
+$('#lastShot').addEventListener('click', () => document.body.classList.add('tray'));
+$('#btnSheetClose').addEventListener('click', closePanels);
+$('#btnTrayClose').addEventListener('click', closePanels);
+$('#backdrop').addEventListener('click', closePanels);
+$('#saveClose').addEventListener('click', () => { $('#saveHelp').hidden = true; });
+if (CRIOS) document.body.classList.add('crios');
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closePanels(); });
+/* ★ iPhone 版 Chrome 的「下拉重新整理」（2026-11-18：照片匣開著時整頁重載兩次）。
+   手機版整個畫面不捲，手指往下一拖就被瀏覽器當成下拉重整——面板上那條把手又正好叫人往下拖。
+   所以：不在可捲區域裡的拖曳一律擋掉；直向可捲的（照片格、說明面板）捲到頂還往下拉也擋；
+   橫向的列（開關、模板）只放行橫向拖。另外把「往下拖面板＝收起」做出來，跟把手的暗示一致。 */
+const drag = { x: 0, y: 0, sc: null, panel: null, top: true };
+document.addEventListener('touchstart', e => {
+  const t = e.touches[0], tg = e.target.closest ? e.target : document.body;
+  drag.x = t.clientX; drag.y = t.clientY;
+  drag.sc = tg.closest('.shots, .tpl-col, .tools, .tpl-strip');
+  drag.panel = tg.closest('.shots-tray, .tpl-col');
+  drag.top = !drag.sc || drag.sc.scrollTop <= 0 || drag.sc.classList.contains('tools') || drag.sc.classList.contains('tpl-strip');
+}, { passive: true });
+document.addEventListener('touchmove', e => {
+  if (!MQ.matches || e.touches.length > 1 || !e.cancelable) return;   // 兩指縮放不管
+  const t = e.touches[0], dx = t.clientX - drag.x, dy = t.clientY - drag.y, sc = drag.sc;
+  const vertical = Math.abs(dy) > Math.abs(dx);
+  if (!sc) { e.preventDefault(); return; }
+  const horiz = sc.classList.contains('tools') || sc.classList.contains('tpl-strip');
+  if (horiz ? vertical : (dy > 0 && sc.scrollTop <= 0)) e.preventDefault();
+}, { passive: false });
+document.addEventListener('touchend', e => {
+  if (!MQ.matches || !drag.panel || !drag.top) return;
+  const t = e.changedTouches[0], dx = t.clientX - drag.x, dy = t.clientY - drag.y;
+  if (dy > 80 && Math.abs(dy) > Math.abs(dx) * 1.5) closePanels();
+}, { passive: true });
+document.querySelectorAll('#zoomSeg button').forEach(b => b.addEventListener('click', () => setZoom(+b.dataset.z)));
+document.addEventListener('keydown', e => {
+  if (e.target.closest && e.target.closest('input,textarea,select')) return;
+  if (e.code === 'Space') { e.preventDefault(); shutter(); }
+  const n = parseInt(e.key, 10);
+  if (n >= 0 && n <= 9) { const i = n === 0 ? 9 : n - 1; if (i < TPLS.length) selectTpl(i, false); }
+});
+
+renderList();
+syncToggles();
+selectTpl(idxOf(st.tpl), false);
+requestAnimationFrame(hudLoop);
+albumInit();            // 把上次留在這支手機裡的照片（最多 50 張）讀回照片匣
+startCamera();          // 打開頁面就開相機；被拒或開不了才露出「開啟相機」按鈕
+// 手機切到別的 App 再回來，相機串流常被系統收掉（track 變 ended）——回來時自己接上
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && track && track.readyState === 'ended') startCamera();
+});
+})();
 </script>
 </body>
 </html>
